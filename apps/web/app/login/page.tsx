@@ -2,14 +2,17 @@
 
 import { useState } from "react";
 import { Zap, Github } from "lucide-react";
+import { authClient } from "@/lib/auth-client";
 
 export default function LoginPage() {
   const [loading, setLoading] = useState(false);
 
   const handleSignIn = async () => {
     setLoading(true);
-    // Better Auth sign-in will be wired in Phase 4
-    window.location.href = "/api/auth/callback/github";
+    await authClient.signIn.social({
+      provider: "github",
+      callbackURL: "/",
+    });
   };
 
   return (

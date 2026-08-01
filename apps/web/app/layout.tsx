@@ -1,3 +1,5 @@
+import "./globals.css";
+
 export const metadata = {
   title: "DevPulse — AI-Powered Developer Analytics",
   description: "Track team productivity, code quality, and development velocity with AI-powered insights.",
