@@ -1,0 +1,168 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified Boolean   @default(false)
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  teams         TeamMember[]
+  ownedTeams    Team[]    @relation("TeamOwner")
+  accounts      Account[]
+  sessions      Session[]
+  activities    Activity[]
+}
+
+model Account {
+  id                    String  @id @default(cuid())
+  userId                String
+  accountId             String
+  providerId            String
+  accessToken           String?
+  refreshToken          String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  user                  User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([providerId, accountId])
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Verification {
+  id         String   @id @default(cuid())
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([identifier, value])
+}
+
+model Team {
+  id        String       @id @default(cuid())
+  name      String
+  slug      String       @unique
+  ownerId   String
+  owner     User         @relation("TeamOwner", fields: [ownerId], references: [id])
+  members   TeamMember[]
+  projects  Project[]
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+}
+
+model TeamMember {
+  id        String   @id @default(cuid())
+  teamId    String
+  userId    String
+  role      String   @default("member")
+  createdAt DateTime @default(now())
+  team      Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([teamId, userId])
+}
+
+model Project {
+  id           String              @id @default(cuid())
+  name         String
+  githubRepo   String
+  teamId       String
+  team         Team                @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  pullRequests PullRequest[]
+  commits      Commit[]
+  analytics    AnalyticsSnapshot[]
+  lastSyncedAt DateTime?
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+}
+
+model PullRequest {
+  id             String    @id @default(cuid())
+  githubId       Int       @unique
+  number         Int
+  title          String
+  body           String?   @db.Text
+  state          String
+  author         String
+  authorAvatar   String?
+  projectId      String
+  project        Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  createdAt      DateTime
+  mergedAt       DateTime?
+  closedAt       DateTime?
+  additions      Int       @default(0)
+  deletions      Int       @default(0)
+  changedFiles   Int       @default(0)
+  reviewTime     Int?
+  firstReviewAt  DateTime?
+  aiSummary      String?   @db.Text
+  aiQualityScore Int?
+}
+
+model Commit {
+  id           String   @id @default(cuid())
+  sha          String   @unique
+  message      String   @db.Text
+  author       String
+  authorAvatar String?
+  projectId    String
+  project      Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  prId         String?
+  pr           PullRequest? @relation(fields: [prId], references: [id])
+  createdAt    DateTime
+  additions    Int      @default(0)
+  deletions    Int      @default(0)
+}
+
+model AnalyticsSnapshot {
+  id                 String   @id @default(cuid())
+  projectId          String
+  project            Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  date               DateTime @default(now())
+  totalPRs           Int      @default(0)
+  mergedPRs          Int      @default(0)
+  openPRs            Int      @default(0)
+  closedPRs          Int      @default(0)
+  avgReviewTime      Int?
+  avgPRSize          Int?
+  mergeRate          Float?
+  avgQualityScore    Int?
+  commitsCount       Int      @default(0)
+  activeContributors Int      @default(0)
+}
+
+model Activity {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String
+  metadata  Json?
+  createdAt DateTime @default(now())
+}
