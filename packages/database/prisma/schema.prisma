@@ -124,6 +124,7 @@ model PullRequest {
   firstReviewAt  DateTime?
   aiSummary      String?   @db.Text
   aiQualityScore Int?
+  commits        Commit[]
 }
 
 model Commit {
