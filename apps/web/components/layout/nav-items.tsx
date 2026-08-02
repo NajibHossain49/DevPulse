@@ -7,6 +7,8 @@ import {
   GitBranch,
   Users,
   Heart,
+  Target,
+  FileText,
   CreditCard,
   Plug,
   Settings,
@@ -25,6 +27,8 @@ export const NAV_ITEMS: NavItem[] = [
   { label: "Projects", href: "/dashboard/projects", icon: GitBranch },
   { label: "Teams", href: "/dashboard/teams", icon: Users },
   { label: "Wellness", href: "/dashboard/team/wellness", icon: Heart },
+  { label: "Goals", href: "/dashboard/goals", icon: Target },
+  { label: "Reports", href: "/dashboard/reports", icon: FileText },
   { label: "Billing", href: "/dashboard/settings/billing", icon: CreditCard },
   {
     label: "Integrations",

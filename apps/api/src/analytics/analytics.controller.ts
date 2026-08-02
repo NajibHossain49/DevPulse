@@ -7,6 +7,7 @@ import {
 } from "@nestjs/swagger";
 import { AuthGuard } from "../auth/auth.guard";
 import { AnalyticsService, ProjectMetrics } from "./analytics.service";
+import { DoraService } from "./dora.service";
 import { RedisService } from "../redis/redis.service";
 import { PrismaService } from "../prisma/prisma.service";
 
@@ -19,6 +20,7 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 export class AnalyticsController {
   constructor(
     private readonly analyticsService: AnalyticsService,
+    private readonly doraService: DoraService,
     private readonly redisService: RedisService,
     private readonly prisma: PrismaService,
   ) {}
@@ -87,6 +89,21 @@ export class AnalyticsController {
   @ApiResponse({ status: 401, description: "Unauthorized" })
   getReviewTime(@Query("projectId") projectId: string) {
     return this.analyticsService.getReviewTimeDistribution(projectId);
+  }
+
+  @Get("dora")
+  @ApiOperation({ summary: "DORA metrics (DevOps Research and Assessment)" })
+  @ApiResponse({ status: 200, description: "Success" })
+  @ApiResponse({ status: 401, description: "Unauthorized" })
+  getDoraMetrics(
+    @Query("projectId") projectId: string,
+    @Query("weeks") weeks?: string,
+  ) {
+    const parsedWeeks = weeks ? parseInt(weeks, 10) : 4;
+    return this.doraService.calculateDoraMetrics(
+      projectId,
+      Number.isFinite(parsedWeeks) && parsedWeeks > 0 ? parsedWeeks : 4,
+    );
   }
 
   @Get("timeline")

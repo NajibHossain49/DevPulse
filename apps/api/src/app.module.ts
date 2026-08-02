@@ -20,6 +20,9 @@ import { AlertsModule } from "./alerts/alerts.module";
 import { EventsModule } from "./events/events.module";
 import { SlackModule } from "./slack/slack.module";
 import { CommentsModule } from "./comments/comments.module";
+import { BenchmarksModule } from "./benchmarks/benchmarks.module";
+import { GoalsModule } from "./goals/goals.module";
+import { ReportsModule } from "./reports/reports.module";
 
 @Module({
   imports: [
@@ -48,6 +51,9 @@ import { CommentsModule } from "./comments/comments.module";
     EventsModule,
     SlackModule,
     CommentsModule,
+    BenchmarksModule,
+    GoalsModule,
+    ReportsModule,
   ],
   controllers: [AppController],
   providers: [

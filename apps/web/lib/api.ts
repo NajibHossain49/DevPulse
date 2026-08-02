@@ -40,6 +40,21 @@ export async function apiPost<T>(path: string, body: unknown): Promise<T> {
   return res.json() as Promise<T>;
 }
 
+export async function apiDelete<T>(path: string): Promise<T> {
+  const res = await apiFetch(path, { method: "DELETE" });
+  if (!res.ok) {
+    let message = `DELETE ${path} failed with ${res.status}`;
+    try {
+      const data = (await res.json()) as { error?: string };
+      if (data?.error) message = data.error;
+    } catch {
+      // ignore JSON parse failure
+    }
+    throw new Error(message);
+  }
+  return res.json() as Promise<T>;
+}
+
 interface Envelope<T> {
   success: boolean;
   data: T;
@@ -54,5 +69,10 @@ export async function apiGetData<T>(path: string): Promise<T> {
 
 export async function apiPostData<T>(path: string, body: unknown): Promise<T> {
   const res = await apiPost<Envelope<T>>(path, body);
+  return res.data;
+}
+
+export async function apiDeleteData<T>(path: string): Promise<T> {
+  const res = await apiDelete<Envelope<T>>(path);
   return res.data;
 }

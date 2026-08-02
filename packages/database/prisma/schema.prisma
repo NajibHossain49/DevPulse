@@ -89,6 +89,7 @@ model Team {
   members      TeamMember[]
   projects     Project[]
   subscription Subscription?
+  goals        Goal[]
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
 }
@@ -210,6 +211,21 @@ model Activity {
   type      String
   metadata  Json?
   createdAt DateTime @default(now())
+}
+
+model Goal {
+  id          String   @id @default(cuid())
+  teamId      String
+  team        Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  title       String
+  description String?
+  metric      String // review_time | merge_rate | pr_count | commit_count | quality_score
+  target      Float
+  current     Float    @default(0)
+  deadline    DateTime
+  status      String   @default("active") // active | achieved | missed
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
 model Comment {

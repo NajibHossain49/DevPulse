@@ -11,6 +11,8 @@ import { VelocityChart } from "./velocity-chart";
 import { ContributorChart } from "./contributor-chart";
 import { ReviewTimeChart } from "./review-time-chart";
 import { QualityTrendChart } from "./quality-trend-chart";
+import DoraMetrics from "./dora-metrics";
+import BenchmarkChart from "./benchmark-chart";
 
 const PERIODS: Period[] = ["7d", "30d", "90d"];
 
@@ -57,6 +59,8 @@ export function AnalyticsPanel({ projectId }: { projectId: string }) {
       </div>
 
       <div key={refreshKey} className="space-y-6">
+        <DoraMetrics projectId={projectId} />
+
         <Card>
           <CardHeader>
             <CardTitle className="text-base">Velocity</CardTitle>
@@ -93,6 +97,8 @@ export function AnalyticsPanel({ projectId }: { projectId: string }) {
             <QualityTrendChart projectId={projectId} />
           </CardContent>
         </Card>
+
+        <BenchmarkChart projectId={projectId} />
       </div>
     </div>
   );
