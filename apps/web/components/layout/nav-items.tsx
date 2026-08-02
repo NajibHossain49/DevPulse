@@ -9,6 +9,8 @@ import {
   Heart,
   Target,
   FileText,
+  Trophy,
+  Shield,
   CreditCard,
   Plug,
   Settings,
@@ -29,6 +31,8 @@ export const NAV_ITEMS: NavItem[] = [
   { label: "Wellness", href: "/dashboard/team/wellness", icon: Heart },
   { label: "Goals", href: "/dashboard/goals", icon: Target },
   { label: "Reports", href: "/dashboard/reports", icon: FileText },
+  { label: "Leaderboard", href: "/dashboard/leaderboard", icon: Trophy },
+  { label: "Audit Logs", href: "/dashboard/admin/audit", icon: Shield },
   { label: "Billing", href: "/dashboard/settings/billing", icon: CreditCard },
   {
     label: "Integrations",

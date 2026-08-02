@@ -25,6 +25,9 @@ import { GoalsModule } from "./goals/goals.module";
 import { ReportsModule } from "./reports/reports.module";
 import { IntegrationsModule } from "./integrations/integrations.module";
 import { GitlabModule } from "./gitlab/gitlab.module";
+import { GamificationModule } from "./gamification/gamification.module";
+import { AuditModule } from "./audit/audit.module";
+import { QueueModule } from "./queue/queue.module";
 
 @Module({
   imports: [
@@ -58,6 +61,9 @@ import { GitlabModule } from "./gitlab/gitlab.module";
     BenchmarksModule,
     GoalsModule,
     ReportsModule,
+    GamificationModule,
+    AuditModule,
+    QueueModule.forRoot(),
   ],
   controllers: [AppController],
   providers: [

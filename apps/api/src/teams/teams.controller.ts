@@ -20,6 +20,7 @@ import { CreateTeamDto } from "./dto/create-team.dto";
 import { PermissionsGuard } from "../permissions/permissions.guard";
 import { RequirePermission } from "../permissions/permissions.decorator";
 import { Permission } from "../permissions/permissions.service";
+import { AuditAction, AuditResource } from "../audit/audit.decorator";
 
 @ApiTags("teams")
 @ApiBearerAuth()
@@ -29,6 +30,8 @@ export class TeamsController {
   constructor(private readonly teamsService: TeamsService) {}
 
   @Post()
+  @AuditAction("create_team")
+  @AuditResource("team")
   @ApiOperation({ summary: "Create a team" })
   @ApiResponse({ status: 200, description: "Success" })
   @ApiResponse({ status: 400, description: "Bad request" })
@@ -58,6 +61,8 @@ export class TeamsController {
 
   @Delete(":id")
   @RequirePermission(Permission.TEAM_ADMIN)
+  @AuditAction("delete_team")
+  @AuditResource("team")
   @ApiOperation({ summary: "Delete a team (owner/admin only)" })
   @ApiResponse({ status: 200, description: "Success" })
   @ApiResponse({ status: 401, description: "Unauthorized" })

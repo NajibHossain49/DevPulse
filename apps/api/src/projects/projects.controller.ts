@@ -25,6 +25,7 @@ import { Permission } from "../permissions/permissions.service";
 import { UsageGuard } from "../usage/usage.guard";
 import { UsageLimit } from "../usage/usage.decorator";
 import { UsageService } from "../usage/usage.service";
+import { AuditAction, AuditResource } from "../audit/audit.decorator";
 
 @ApiTags("projects")
 @ApiBearerAuth()
@@ -39,6 +40,8 @@ export class ProjectsController {
   @Post()
   @RequirePermission(Permission.PROJECT_WRITE)
   @UsageLimit("project")
+  @AuditAction("create_project")
+  @AuditResource("project")
   @ApiOperation({ summary: "Create a project (validates the GitHub repo)" })
   @ApiResponse({ status: 200, description: "Success" })
   @ApiResponse({ status: 400, description: "Bad request" })
@@ -89,6 +92,8 @@ export class ProjectsController {
 
   @Delete(":id")
   @RequirePermission(Permission.PROJECT_DELETE)
+  @AuditAction("delete_project")
+  @AuditResource("project")
   @ApiOperation({ summary: "Delete a project (admin/owner only)" })
   @ApiResponse({ status: 200, description: "Success" })
   @ApiResponse({ status: 401, description: "Unauthorized" })

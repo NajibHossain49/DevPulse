@@ -30,12 +30,15 @@ model User {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
-  teams         TeamMember[]
-  ownedTeams    Team[]    @relation("TeamOwner")
-  accounts      Account[]
-  sessions      Session[]
-  activities    Activity[]
-  comments      Comment[]
+  teams              TeamMember[]
+  ownedTeams         Team[]              @relation("TeamOwner")
+  accounts           Account[]
+  sessions           Session[]
+  activities         Activity[]
+  comments           Comment[]
+  achievements       Achievement[]
+  leaderboardEntries LeaderboardEntry[]
+  auditLogs          AuditLog[]
 }
 
 model Account {
@@ -241,4 +244,49 @@ model Comment {
   replies   Comment[]   @relation("CommentReplies")
   createdAt DateTime    @default(now())
   updatedAt DateTime    @updatedAt
+}
+
+model Achievement {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type        String // speed_demon | quality_champion | merge_master | night_owl | early_bird | streak | reviewer
+  title       String
+  description String
+  icon        String // lucide icon name
+  unlockedAt  DateTime @default(now())
+
+  @@unique([userId, type])
+  @@index([userId])
+}
+
+model LeaderboardEntry {
+  id        String   @id @default(cuid())
+  teamId    String
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  period    String // YYYY-WNN for weekly
+  metric    String // prs_merged | review_speed | quality_score | commits
+  score     Int      @default(0)
+  rank      Int?
+  createdAt DateTime @default(now())
+
+  @@unique([teamId, userId, period, metric])
+  @@index([teamId, period, metric])
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  userId     String?
+  user       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  action     String // create_team | delete_project | invite_member | update_billing | etc.
+  resource   String // team | project | member | billing | settings
+  resourceId String?
+  metadata   Json?
+  ipAddress  String?
+  userAgent  String?
+  createdAt  DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([resource, action])
 }
