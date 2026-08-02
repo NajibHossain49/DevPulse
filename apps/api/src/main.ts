@@ -6,7 +6,8 @@ import { AllExceptionsFilter } from "./common/filters/all-exceptions.filter";
 import { TransformInterceptor } from "./common/interceptors/transform.interceptor";
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  // rawBody is required so the Stripe webhook can verify the request signature.
+  const app = await NestFactory.create(AppModule, { rawBody: true });
 
   app.enableCors({
     origin: process.env.WEB_URL || "http://localhost:3000",

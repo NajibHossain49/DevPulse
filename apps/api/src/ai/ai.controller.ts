@@ -12,6 +12,7 @@ import {
   ApiResponse,
   ApiBearerAuth,
 } from "@nestjs/swagger";
+import { Throttle } from "@nestjs/throttler";
 import { AuthGuard } from "../auth/auth.guard";
 import { CurrentUser } from "../auth/auth.decorator";
 import { PrismaService } from "../prisma/prisma.service";
@@ -23,6 +24,9 @@ import { AnalyzePrDto } from "./dto/analyze-pr.dto";
 import { StandupDto } from "./dto/standup.dto";
 import { InsightsDto } from "./dto/insights.dto";
 import { BatchAnalyzeDto } from "./dto/batch-analyze.dto";
+import { UsageGuard } from "../usage/usage.guard";
+import { UsageLimit } from "../usage/usage.decorator";
+import { UsageService } from "../usage/usage.service";
 
 const PR_CACHE_TTL = 86400; // 24 hours
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -31,7 +35,7 @@ const BATCH_SIZE = 5;
 @ApiTags("ai")
 @ApiBearerAuth()
 @Controller("ai")
-@UseGuards(AuthGuard)
+@UseGuards(AuthGuard, UsageGuard)
 export class AiController {
   constructor(
     private readonly aiService: AiService,
@@ -39,13 +43,18 @@ export class AiController {
     private readonly redisService: RedisService,
     private readonly githubService: GithubService,
     private readonly analyticsService: AnalyticsService,
+    private readonly usageService: UsageService,
   ) {}
 
   @Post("analyze")
+  @UsageLimit("ai_analysis")
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
   @ApiOperation({ summary: "Analyze a single PR with AI (cached 24h)" })
   @ApiResponse({ status: 200, description: "Success" })
   @ApiResponse({ status: 400, description: "Bad request" })
   @ApiResponse({ status: 401, description: "Unauthorized" })
+  @ApiResponse({ status: 403, description: "Forbidden / limit exceeded" })
+  @ApiResponse({ status: 429, description: "Too many requests" })
   async analyze(
     @CurrentUser("id") userId: string,
     @Body() dto: AnalyzePrDto,
@@ -56,7 +65,7 @@ export class AiController {
       return cached;
     }
 
-    await this.assertProjectAccess(userId, dto.projectId);
+    const project = await this.assertProjectAccess(userId, dto.projectId);
 
     const pr = await this.prisma.pullRequest.findUnique({
       where: { id: dto.prId },
@@ -75,6 +84,7 @@ export class AiController {
     );
 
     await this.redisService.set(cacheKey, result, PR_CACHE_TTL);
+    await this.usageService.incrementUsage(project.teamId, "ai_analysis");
     return result;
   }
 
@@ -159,6 +169,7 @@ export class AiController {
   }
 
   @Post("batch-analyze")
+  @Throttle({ default: { limit: 3, ttl: 60000 } })
   @ApiOperation({ summary: "Analyze all un-scored PRs in batches of 5" })
   @ApiResponse({ status: 200, description: "Success" })
   @ApiResponse({ status: 400, description: "Bad request" })

@@ -17,11 +17,14 @@ import { AuthGuard } from "../auth/auth.guard";
 import { CurrentUser } from "../auth/auth.decorator";
 import { TeamsService } from "./teams.service";
 import { CreateTeamDto } from "./dto/create-team.dto";
+import { PermissionsGuard } from "../permissions/permissions.guard";
+import { RequirePermission } from "../permissions/permissions.decorator";
+import { Permission } from "../permissions/permissions.service";
 
 @ApiTags("teams")
 @ApiBearerAuth()
 @Controller("teams")
-@UseGuards(AuthGuard)
+@UseGuards(AuthGuard, PermissionsGuard)
 export class TeamsController {
   constructor(private readonly teamsService: TeamsService) {}
 
@@ -54,9 +57,11 @@ export class TeamsController {
   }
 
   @Delete(":id")
-  @ApiOperation({ summary: "Delete a team (owner only)" })
+  @RequirePermission(Permission.TEAM_ADMIN)
+  @ApiOperation({ summary: "Delete a team (owner/admin only)" })
   @ApiResponse({ status: 200, description: "Success" })
   @ApiResponse({ status: 401, description: "Unauthorized" })
+  @ApiResponse({ status: 403, description: "Forbidden" })
   deleteTeam(@CurrentUser("id") userId: string, @Param("id") id: string) {
     return this.teamsService.deleteTeam(userId, id);
   }

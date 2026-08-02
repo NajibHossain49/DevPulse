@@ -4,6 +4,7 @@ import { GithubModule } from "../github/github.module";
 import { RedisModule } from "../redis/redis.module";
 import { AnalyticsModule } from "../analytics/analytics.module";
 import { AuthModule } from "../auth/auth.module";
+import { UsageModule } from "../usage/usage.module";
 import { AiService } from "./ai.service";
 import { AiController } from "./ai.controller";
 
@@ -14,6 +15,7 @@ import { AiController } from "./ai.controller";
     RedisModule,
     AnalyticsModule,
     AuthModule,
+    UsageModule,
   ],
   controllers: [AiController],
   providers: [AiService],

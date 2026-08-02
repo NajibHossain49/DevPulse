@@ -1,24 +1,32 @@
-import { PrismaService } from "../prisma/prisma.service";
+import "dotenv/config";
+import { PrismaClient } from "@devpulse/database";
+
+const prisma = new PrismaClient();
 
 async function seed() {
-  const prisma = new PrismaService();
+  console.log("Seeding default subscriptions...");
 
-  try {
-    console.log("Seed script for DevPulse");
-    console.log("Instructions:");
-    console.log("1. Login via web app to create a user");
-    console.log("2. Create a team via POST /teams");
-    console.log("3. Create a project via POST /projects");
-    console.log("4. Trigger sync via POST /github/sync");
-    console.log("5. Run AI analysis via POST /ai/batch-analyze");
-  } finally {
-    await prisma.$disconnect();
+  const teams = await prisma.team.findMany({
+    where: { subscription: null },
+  });
+
+  for (const team of teams) {
+    await prisma.subscription.create({
+      data: {
+        teamId: team.id,
+        plan: "free",
+        status: "active",
+      },
+    });
+    console.log(`Created free subscription for team: ${team.name}`);
   }
+
+  console.log(`Seed complete! (${teams.length} team(s) updated)`);
 }
 
 seed()
-  .then(() => process.exit(0))
   .catch((error) => {
     console.error(error);
     process.exit(1);
-  });
+  })
+  .finally(() => prisma.$disconnect());

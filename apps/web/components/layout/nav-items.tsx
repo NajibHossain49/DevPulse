@@ -6,6 +6,7 @@ import {
   LayoutDashboard,
   GitBranch,
   Users,
+  CreditCard,
   Settings,
   type LucideIcon,
 } from "lucide-react";
@@ -21,6 +22,7 @@ export const NAV_ITEMS: NavItem[] = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { label: "Projects", href: "/dashboard/projects", icon: GitBranch },
   { label: "Teams", href: "/dashboard/teams", icon: Users },
+  { label: "Billing", href: "/dashboard/settings/billing", icon: CreditCard },
   { label: "Settings", href: "/dashboard/settings", icon: Settings },
 ];
 

@@ -18,24 +18,38 @@ import { AuthGuard } from "../auth/auth.guard";
 import { CurrentUser } from "../auth/auth.decorator";
 import { ProjectsService } from "./projects.service";
 import { CreateProjectDto } from "./dto/create-project.dto";
+import { PermissionsGuard } from "../permissions/permissions.guard";
+import { RequirePermission } from "../permissions/permissions.decorator";
+import { Permission } from "../permissions/permissions.service";
+import { UsageGuard } from "../usage/usage.guard";
+import { UsageLimit } from "../usage/usage.decorator";
+import { UsageService } from "../usage/usage.service";
 
 @ApiTags("projects")
 @ApiBearerAuth()
 @Controller("projects")
-@UseGuards(AuthGuard)
+@UseGuards(AuthGuard, PermissionsGuard, UsageGuard)
 export class ProjectsController {
-  constructor(private readonly projectsService: ProjectsService) {}
+  constructor(
+    private readonly projectsService: ProjectsService,
+    private readonly usageService: UsageService,
+  ) {}
 
   @Post()
+  @RequirePermission(Permission.PROJECT_WRITE)
+  @UsageLimit("project")
   @ApiOperation({ summary: "Create a project (validates the GitHub repo)" })
   @ApiResponse({ status: 200, description: "Success" })
   @ApiResponse({ status: 400, description: "Bad request" })
   @ApiResponse({ status: 401, description: "Unauthorized" })
-  createProject(
+  @ApiResponse({ status: 403, description: "Forbidden / limit exceeded" })
+  async createProject(
     @CurrentUser("id") userId: string,
     @Body() dto: CreateProjectDto,
   ) {
-    return this.projectsService.createProject(userId, dto);
+    const project = await this.projectsService.createProject(userId, dto);
+    await this.usageService.incrementUsage(dto.teamId, "project");
+    return project;
   }
 
   @Get()
@@ -59,9 +73,11 @@ export class ProjectsController {
   }
 
   @Delete(":id")
+  @RequirePermission(Permission.PROJECT_DELETE)
   @ApiOperation({ summary: "Delete a project (admin/owner only)" })
   @ApiResponse({ status: 200, description: "Success" })
   @ApiResponse({ status: 401, description: "Unauthorized" })
+  @ApiResponse({ status: 403, description: "Forbidden" })
   deleteProject(
     @CurrentUser("id") userId: string,
     @Param("id") id: string,

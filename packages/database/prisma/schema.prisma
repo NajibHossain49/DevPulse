@@ -8,6 +8,19 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
+enum Plan {
+  free
+  pro
+  enterprise
+}
+
+enum TeamRole {
+  owner
+  admin
+  member
+  viewer
+}
+
 model User {
   id            String    @id @default(cuid())
   name          String?
@@ -67,27 +80,54 @@ model Verification {
 }
 
 model Team {
-  id        String       @id @default(cuid())
-  name      String
-  slug      String       @unique
-  ownerId   String
-  owner     User         @relation("TeamOwner", fields: [ownerId], references: [id])
-  members   TeamMember[]
-  projects  Project[]
-  createdAt DateTime     @default(now())
-  updatedAt DateTime     @updatedAt
+  id           String        @id @default(cuid())
+  name         String
+  slug         String        @unique
+  ownerId      String
+  owner        User          @relation("TeamOwner", fields: [ownerId], references: [id])
+  members      TeamMember[]
+  projects     Project[]
+  subscription Subscription?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
 }
 
 model TeamMember {
   id        String   @id @default(cuid())
   teamId    String
   userId    String
-  role      String   @default("member")
+  role      TeamRole @default(member)
   createdAt DateTime @default(now())
   team      Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([teamId, userId])
+}
+
+model Subscription {
+  id                   String    @id @default(cuid())
+  teamId               String    @unique
+  team                 Team      @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  plan                 Plan      @default(free)
+  stripeCustomerId     String?
+  stripeSubscriptionId String?
+  status               String    @default("active") // active | canceled | past_due
+  currentPeriodStart   DateTime?
+  currentPeriodEnd     DateTime?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+}
+
+model UsageRecord {
+  id        String   @id @default(cuid())
+  teamId    String
+  type      String // project | team_member | ai_analysis | sync
+  count     Int      @default(0)
+  period    String // YYYY-MM format
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([teamId, type, period])
 }
 
 model Project {
