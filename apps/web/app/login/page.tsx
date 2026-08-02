@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Zap, Github, Loader2 } from "lucide-react";
+import { Zap, Github, Loader2, AlertCircle } from "lucide-react";
+import { toast } from "sonner";
 import { authClient } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,13 +15,29 @@ import {
 
 export default function LoginPage() {
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleSignIn = async () => {
     setLoading(true);
-    await authClient.signIn.social({
-      provider: "github",
-      callbackURL: "/dashboard",
-    });
+    setError(null);
+    try {
+      const { error } = await authClient.signIn.social({
+        provider: "github",
+        callbackURL: "/dashboard",
+      });
+      if (error) {
+        const message = error.message ?? "Failed to sign in. Please try again.";
+        setError(message);
+        toast.error(message);
+        setLoading(false);
+      }
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Failed to sign in. Please try again.";
+      setError(message);
+      toast.error(message);
+      setLoading(false);
+    }
   };
 
   return (
@@ -43,7 +60,13 @@ export default function LoginPage() {
               Sign in with your GitHub account to continue.
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-3">
+            {error && (
+              <div className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                <AlertCircle className="mt-0.5 size-4 shrink-0" />
+                <span>{error}</span>
+              </div>
+            )}
             <Button
               onClick={handleSignIn}
               disabled={loading}

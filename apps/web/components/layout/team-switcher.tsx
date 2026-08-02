@@ -11,6 +11,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
+  DropdownMenuGroup,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 
@@ -80,7 +81,9 @@ export function TeamSwitcher() {
         <ChevronsUpDown className="size-3.5 text-muted-foreground" />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="w-56">
-        <DropdownMenuLabel>Teams</DropdownMenuLabel>
+        <DropdownMenuGroup>
+          <DropdownMenuLabel>Teams</DropdownMenuLabel>
+        </DropdownMenuGroup>
         <DropdownMenuSeparator />
         {teams.length === 0 ? (
           <DropdownMenuItem disabled>No teams yet</DropdownMenuItem>
