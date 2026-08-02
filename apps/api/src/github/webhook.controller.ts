@@ -1,9 +1,11 @@
 import { Body, Controller, Headers, Post, Res } from "@nestjs/common";
+import { ApiTags, ApiOperation, ApiResponse } from "@nestjs/swagger";
 import type { Response } from "express";
 import * as crypto from "crypto";
 import { PrismaService } from "../prisma/prisma.service";
 import { SyncService } from "./sync.service";
 
+@ApiTags("github")
 @Controller("github/webhook")
 export class WebhookController {
   constructor(
@@ -12,6 +14,9 @@ export class WebhookController {
   ) {}
 
   @Post()
+  @ApiOperation({ summary: "GitHub webhook receiver (HMAC-signed)" })
+  @ApiResponse({ status: 200, description: "Success" })
+  @ApiResponse({ status: 401, description: "Unauthorized" })
   handle(
     @Headers("x-github-event") event: string,
     @Headers("x-hub-signature-256") signature: string,

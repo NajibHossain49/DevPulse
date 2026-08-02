@@ -1,0 +1,163 @@
+"use client";
+
+import { useState } from "react";
+import { useRouter, usePathname } from "next/navigation";
+import Link from "next/link";
+import { Menu, Bell, Zap, User, Settings, LogOut } from "lucide-react";
+import { authClient } from "@/lib/auth-client";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
+import { NavLinks, NAV_ITEMS } from "./nav-items";
+import { TeamSwitcher } from "./team-switcher";
+import type { SidebarUser } from "./sidebar";
+
+export function Header({
+  user,
+  title,
+}: {
+  user: SidebarUser;
+  title?: string;
+}) {
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const router = useRouter();
+  const pathname = usePathname();
+
+  const pageTitle = title ?? deriveTitle(pathname);
+
+  const handleSignOut = async () => {
+    await authClient.signOut();
+    router.push("/login");
+  };
+
+  return (
+    <header className="flex h-16 shrink-0 items-center justify-between gap-3 border-b border-border bg-card/40 px-4">
+      <div className="flex items-center gap-3">
+        {/* Mobile menu */}
+        <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+          <SheetTrigger
+            render={
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                className="md:hidden"
+                aria-label="Open menu"
+              />
+            }
+          >
+            <Menu className="size-5" />
+          </SheetTrigger>
+          <SheetContent side="left" className="w-64 p-0">
+            <SheetHeader className="border-b border-border">
+              <SheetTitle className="flex items-center gap-2">
+                <div className="flex size-7 items-center justify-center rounded-lg bg-linear-to-br from-brand-from to-brand-to">
+                  <Zap className="size-4 text-white" />
+                </div>
+                DevPulse
+              </SheetTitle>
+            </SheetHeader>
+            <div className="py-4">
+              <NavLinks onNavigate={() => setMobileOpen(false)} />
+            </div>
+          </SheetContent>
+        </Sheet>
+
+        <h1 className="text-base font-semibold">{pageTitle}</h1>
+        <div className="hidden sm:block">
+          <TeamSwitcher />
+        </div>
+      </div>
+
+      <div className="flex items-center gap-1">
+        <Button variant="ghost" size="icon-sm" aria-label="Notifications">
+          <Bell className="size-5" />
+        </Button>
+
+        <DropdownMenu>
+          <DropdownMenuTrigger
+            render={
+              <Button
+                variant="ghost"
+                size="icon"
+                className="rounded-full"
+                aria-label="Account menu"
+              />
+            }
+          >
+            <Avatar size="sm">
+              {user.image ? <AvatarImage src={user.image} alt="" /> : null}
+              <AvatarFallback>
+                {initials(user.name, user.email)}
+              </AvatarFallback>
+            </Avatar>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-56">
+            <DropdownMenuLabel>
+              <div className="flex flex-col">
+                <span className="truncate font-medium text-foreground">
+                  {user.name ?? "User"}
+                </span>
+                <span className="truncate text-xs text-muted-foreground">
+                  {user.email}
+                </span>
+              </div>
+            </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              render={<Link href="/dashboard/settings" />}
+            >
+              <User className="size-4" />
+              Profile
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              render={<Link href="/dashboard/settings" />}
+            >
+              <Settings className="size-4" />
+              Settings
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem variant="destructive" onClick={handleSignOut}>
+              <LogOut className="size-4" />
+              Sign out
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+    </header>
+  );
+}
+
+function deriveTitle(pathname: string): string {
+  const match = NAV_ITEMS.find((item) =>
+    item.href === "/dashboard"
+      ? pathname === "/dashboard"
+      : pathname.startsWith(item.href),
+  );
+  return match?.label ?? "Dashboard";
+}
+
+function initials(name?: string | null, email?: string | null): string {
+  if (name) {
+    return name
+      .split(" ")
+      .map((p) => p[0])
+      .join("")
+      .slice(0, 2)
+      .toUpperCase();
+  }
+  return (email?.[0] ?? "U").toUpperCase();
+}

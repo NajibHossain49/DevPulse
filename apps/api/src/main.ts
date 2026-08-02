@@ -2,7 +2,8 @@ import { NestFactory } from "@nestjs/core";
 import { SwaggerModule, DocumentBuilder } from "@nestjs/swagger";
 import { ValidationPipe } from "@nestjs/common";
 import { AppModule } from "./app.module";
-import { AllExceptionsFilter } from "./common/all-exceptions.filter";
+import { AllExceptionsFilter } from "./common/filters/all-exceptions.filter";
+import { TransformInterceptor } from "./common/interceptors/transform.interceptor";
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -19,6 +20,7 @@ async function bootstrap() {
   }));
 
   app.useGlobalFilters(new AllExceptionsFilter());
+  app.useGlobalInterceptors(new TransformInterceptor());
 
   const config = new DocumentBuilder()
     .setTitle("DevPulse API")

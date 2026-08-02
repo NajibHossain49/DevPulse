@@ -6,12 +6,20 @@ import {
   Post,
   UseGuards,
 } from "@nestjs/common";
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+} from "@nestjs/swagger";
 import { AuthGuard } from "../auth/auth.guard";
 import { CurrentUser } from "../auth/auth.decorator";
 import { PrismaService } from "../prisma/prisma.service";
 import { SyncService } from "./sync.service";
 import { SyncProjectDto } from "./dto/sync-project.dto";
 
+@ApiTags("github")
+@ApiBearerAuth()
 @Controller("github")
 @UseGuards(AuthGuard)
 export class SyncController {
@@ -21,6 +29,10 @@ export class SyncController {
   ) {}
 
   @Post("sync")
+  @ApiOperation({ summary: "Sync a project's PRs and commits from GitHub" })
+  @ApiResponse({ status: 200, description: "Success" })
+  @ApiResponse({ status: 400, description: "Bad request" })
+  @ApiResponse({ status: 401, description: "Unauthorized" })
   async syncProject(
     @CurrentUser("id") userId: string,
     @Body() dto: SyncProjectDto,

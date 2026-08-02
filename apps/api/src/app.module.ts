@@ -8,6 +8,8 @@ import { TeamsModule } from "./teams/teams.module";
 import { ProjectsModule } from "./projects/projects.module";
 import { GithubModule } from "./github/github.module";
 import { RedisModule } from "./redis/redis.module";
+import { AnalyticsModule } from "./analytics/analytics.module";
+import { AiModule } from "./ai/ai.module";
 
 @Module({
   imports: [
@@ -18,6 +20,8 @@ import { RedisModule } from "./redis/redis.module";
     ProjectsModule,
     GithubModule,
     RedisModule,
+    AnalyticsModule,
+    AiModule,
   ],
   controllers: [AppController],
   providers: [AppService],
