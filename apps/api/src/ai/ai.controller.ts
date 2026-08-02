@@ -2,6 +2,8 @@ import {
   Body,
   Controller,
   ForbiddenException,
+  forwardRef,
+  Inject,
   NotFoundException,
   Post,
   UseGuards,
@@ -24,6 +26,7 @@ import { AnalyzePrDto } from "./dto/analyze-pr.dto";
 import { StandupDto } from "./dto/standup.dto";
 import { InsightsDto } from "./dto/insights.dto";
 import { BatchAnalyzeDto } from "./dto/batch-analyze.dto";
+import { SprintPredictDto } from "./dto/sprint-predict.dto";
 import { UsageGuard } from "../usage/usage.guard";
 import { UsageLimit } from "../usage/usage.decorator";
 import { UsageService } from "../usage/usage.service";
@@ -41,6 +44,7 @@ export class AiController {
     private readonly aiService: AiService,
     private readonly prisma: PrismaService,
     private readonly redisService: RedisService,
+    @Inject(forwardRef(() => GithubService))
     private readonly githubService: GithubService,
     private readonly analyticsService: AnalyticsService,
     private readonly usageService: UsageService,
@@ -213,6 +217,42 @@ export class AiController {
     }
 
     return { analyzed, failed };
+  }
+
+  @Post("sprint-predict")
+  @ApiOperation({ summary: "Predict sprint completion probability" })
+  @ApiResponse({ status: 200, description: "Success" })
+  @ApiResponse({ status: 400, description: "Bad request" })
+  @ApiResponse({ status: 401, description: "Unauthorized" })
+  async predictSprint(
+    @CurrentUser("id") userId: string,
+    @Body() dto: SprintPredictDto,
+  ) {
+    await this.assertProjectAccess(userId, dto.projectId);
+
+    const endDate = new Date();
+    const startDate = new Date(endDate.getTime() - 30 * DAY_MS);
+    const metrics = await this.analyticsService.getProjectMetrics(
+      dto.projectId,
+      startDate,
+      endDate,
+    );
+
+    const openPRs = await this.prisma.pullRequest.count({
+      where: { projectId: dto.projectId, state: "open" },
+    });
+
+    const daysRemaining = Math.ceil(
+      (new Date(dto.sprintEndDate).getTime() - Date.now()) / DAY_MS,
+    );
+
+    return this.aiService.predictSprint({
+      velocity: metrics.totalPRs / 4, // PRs per week over ~30 days
+      openPRs,
+      targetPRs: dto.targetPRs,
+      avgReviewTime: metrics.avgReviewTime,
+      daysRemaining,
+    });
   }
 
   private async runPrAnalysis(

@@ -18,6 +18,7 @@ import { AuthGuard } from "../auth/auth.guard";
 import { CurrentUser } from "../auth/auth.decorator";
 import { ProjectsService } from "./projects.service";
 import { CreateProjectDto } from "./dto/create-project.dto";
+import { UpdateProjectSettingsDto } from "./dto/update-project-settings.dto";
 import { PermissionsGuard } from "../permissions/permissions.guard";
 import { RequirePermission } from "../permissions/permissions.decorator";
 import { Permission } from "../permissions/permissions.service";
@@ -70,6 +71,20 @@ export class ProjectsController {
   @ApiResponse({ status: 401, description: "Unauthorized" })
   getProject(@CurrentUser("id") userId: string, @Param("id") id: string) {
     return this.projectsService.getProject(userId, id);
+  }
+
+  @Post(":id/settings")
+  @RequirePermission(Permission.PROJECT_WRITE)
+  @ApiOperation({ summary: "Update project settings (e.g. auto AI review)" })
+  @ApiResponse({ status: 200, description: "Success" })
+  @ApiResponse({ status: 401, description: "Unauthorized" })
+  @ApiResponse({ status: 403, description: "Forbidden" })
+  updateSettings(
+    @CurrentUser("id") userId: string,
+    @Param("id") id: string,
+    @Body() dto: UpdateProjectSettingsDto,
+  ) {
+    return this.projectsService.updateSettings(userId, id, dto);
   }
 
   @Delete(":id")

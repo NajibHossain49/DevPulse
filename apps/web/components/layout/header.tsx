@@ -1,11 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { Menu, Bell, Zap, User, Settings, LogOut } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
+import { apiGetData } from "@/lib/api";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Sheet,
@@ -84,9 +86,7 @@ export function Header({
       </div>
 
       <div className="flex items-center gap-1">
-        <Button variant="ghost" size="icon-sm" aria-label="Notifications">
-          <Bell className="size-5" />
-        </Button>
+        <AlertsBell />
 
         <DropdownMenu>
           <DropdownMenuTrigger
@@ -141,6 +141,95 @@ export function Header({
         </DropdownMenu>
       </div>
     </header>
+  );
+}
+
+interface AlertItem {
+  id: string;
+  severity: "low" | "medium" | "high";
+  title: string;
+  description: string;
+}
+
+function AlertsBell() {
+  const [alerts, setAlerts] = useState<AlertItem[]>([]);
+
+  useEffect(() => {
+    let active = true;
+    const load = () => {
+      apiGetData<AlertItem[]>("/alerts")
+        .then((data) => {
+          if (active) setAlerts(data);
+        })
+        .catch(() => {
+          // silently ignore — alerts are best-effort
+        });
+    };
+    load();
+    const interval = setInterval(load, 300000); // every 5 minutes
+    return () => {
+      active = false;
+      clearInterval(interval);
+    };
+  }, []);
+
+  const count = alerts.length;
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger
+        render={
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            className="relative"
+            aria-label="Notifications"
+          />
+        }
+      >
+        <Bell className="size-5" />
+        {count > 0 && (
+          <Badge
+            variant="destructive"
+            className="absolute -top-1 -right-1 flex size-4 items-center justify-center rounded-full p-0 text-[10px]"
+          >
+            {count}
+          </Badge>
+        )}
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-80">
+        <DropdownMenuGroup>
+          <DropdownMenuLabel>Alerts</DropdownMenuLabel>
+        </DropdownMenuGroup>
+        <DropdownMenuSeparator />
+        {alerts.length === 0 ? (
+          <DropdownMenuItem disabled>No alerts</DropdownMenuItem>
+        ) : (
+          alerts.slice(0, 5).map((alert) => (
+            <DropdownMenuItem
+              key={alert.id}
+              className="flex flex-col items-start gap-1 p-3"
+            >
+              <div className="flex items-center gap-2">
+                <span
+                  className={`size-2 rounded-full ${
+                    alert.severity === "high"
+                      ? "bg-red-500"
+                      : alert.severity === "medium"
+                        ? "bg-yellow-500"
+                        : "bg-blue-500"
+                  }`}
+                />
+                <span className="text-sm font-medium">{alert.title}</span>
+              </div>
+              <span className="text-xs text-muted-foreground">
+                {alert.description}
+              </span>
+            </DropdownMenuItem>
+          ))
+        )}
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 

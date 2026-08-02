@@ -135,6 +135,7 @@ model Project {
   name         String
   githubRepo   String
   teamId       String
+  autoReview   Boolean             @default(true)
   team         Team                @relation(fields: [teamId], references: [id], onDelete: Cascade)
   pullRequests PullRequest[]
   commits      Commit[]

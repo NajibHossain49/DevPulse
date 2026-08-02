@@ -22,6 +22,23 @@ export interface Insight {
   severity: InsightSeverity;
 }
 
+export type SprintStatus = "on_track" | "at_risk" | "off_track";
+
+export interface SprintPrediction {
+  probability: number;
+  status: SprintStatus;
+  riskFactors: string[];
+  recommendations: string[];
+}
+
+export interface SprintInput {
+  velocity: number;
+  openPRs: number;
+  targetPRs: number;
+  avgReviewTime: number | null;
+  daysRemaining: number;
+}
+
 @Injectable()
 export class AiService {
   private readonly logger = new Logger(AiService.name);
@@ -173,6 +190,95 @@ export class AiService {
       ];
     }
   }
+
+  async predictSprint(data: SprintInput): Promise<SprintPrediction> {
+    const prompt = `As an engineering manager, predict sprint completion:
+- Current velocity: ${data.velocity.toFixed(1)} PRs/week
+- Open PRs in backlog: ${data.openPRs}
+- Sprint target: ${data.targetPRs} PRs
+- Avg review time: ${data.avgReviewTime ?? "unknown"} minutes
+- Days remaining: ${data.daysRemaining}
+
+Return ONLY JSON:
+{
+  "probability": number (0-100),
+  "status": "on_track" | "at_risk" | "off_track",
+  "riskFactors": string[],
+  "recommendations": string[]
+}`;
+
+    try {
+      const completion = await this.groq.chat.completions.create({
+        model: MODEL,
+        temperature: 0.3,
+        max_tokens: 300,
+        messages: [
+          {
+            role: "system",
+            content:
+              "You are a sprint planning expert. Be concise and data-driven.",
+          },
+          { role: "user", content: prompt },
+        ],
+      });
+
+      const content = completion.choices[0]?.message?.content ?? "";
+      const parsed = extractJson<Partial<SprintPrediction>>(content);
+      if (parsed && typeof parsed.probability === "number") {
+        return {
+          probability: clamp(Math.round(parsed.probability), 0, 100),
+          status: normalizeSprintStatus(parsed.status),
+          riskFactors: Array.isArray(parsed.riskFactors)
+            ? parsed.riskFactors.filter(
+                (s): s is string => typeof s === "string",
+              )
+            : [],
+          recommendations: Array.isArray(parsed.recommendations)
+            ? parsed.recommendations.filter(
+                (s): s is string => typeof s === "string",
+              )
+            : [],
+        };
+      }
+    } catch (error) {
+      this.logger.error(`predictSprint failed: ${errMessage(error)}`);
+    }
+
+    // Simple heuristic fallback.
+    const neededPerDay = data.targetPRs / Math.max(data.daysRemaining, 1);
+    const canDeliverPerDay = data.velocity / 7;
+    const probability = clamp(
+      Math.round(
+        (canDeliverPerDay / Math.max(neededPerDay, 0.0001)) * 100,
+      ),
+      0,
+      100,
+    );
+
+    return {
+      probability,
+      status:
+        probability >= 80
+          ? "on_track"
+          : probability >= 50
+            ? "at_risk"
+            : "off_track",
+      riskFactors:
+        data.avgReviewTime && data.avgReviewTime > 240
+          ? ["High review time"]
+          : [],
+      recommendations:
+        probability < 80
+          ? ["Reduce sprint scope", "Add more reviewers"]
+          : ["Continue current pace"],
+    };
+  }
+}
+
+function normalizeSprintStatus(value: unknown): SprintStatus {
+  return value === "on_track" || value === "at_risk" || value === "off_track"
+    ? value
+    : "at_risk";
 }
 
 function extractJson<T>(content: string): T | null {

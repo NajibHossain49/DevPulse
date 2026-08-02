@@ -6,6 +6,7 @@ import {
   LayoutDashboard,
   GitBranch,
   Users,
+  Heart,
   CreditCard,
   Settings,
   type LucideIcon,
@@ -22,6 +23,7 @@ export const NAV_ITEMS: NavItem[] = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { label: "Projects", href: "/dashboard/projects", icon: GitBranch },
   { label: "Teams", href: "/dashboard/teams", icon: Users },
+  { label: "Wellness", href: "/dashboard/team/wellness", icon: Heart },
   { label: "Billing", href: "/dashboard/settings/billing", icon: CreditCard },
   { label: "Settings", href: "/dashboard/settings", icon: Settings },
 ];

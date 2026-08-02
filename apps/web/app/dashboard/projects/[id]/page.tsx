@@ -7,6 +7,7 @@ import { ProjectHeader } from "@/components/projects/project-header";
 import { MetricsGrid } from "@/components/dashboard/metrics-grid";
 import { AiInsights } from "@/components/dashboard/ai-insights";
 import { StandupGenerator } from "@/components/dashboard/standup-generator";
+import { SprintPredictor } from "@/components/dashboard/sprint-predictor";
 import { PrTable } from "@/components/dashboard/pr-table";
 import { PullRequestsPanel } from "@/components/dashboard/pull-requests-panel";
 import { AnalyticsPanel } from "@/components/dashboard/analytics-panel";
@@ -36,6 +37,8 @@ export default function ProjectDetailPage({
             <AiInsights projectId={id} />
             <StandupGenerator projectId={id} />
           </div>
+
+          <SprintPredictor projectId={id} />
 
           <Card>
             <CardHeader>

@@ -75,6 +75,34 @@ export class ProjectsService {
     };
   }
 
+  async updateSettings(
+    userId: string,
+    projectId: string,
+    settings: { autoReview: boolean },
+  ) {
+    const project = await this.prisma.project.findUnique({
+      where: { id: projectId },
+      include: { team: { include: { members: true } } },
+    });
+
+    if (!project) {
+      throw new NotFoundException("Project not found");
+    }
+
+    const { team } = project;
+    const hasAccess =
+      team.ownerId === userId ||
+      team.members.some((m) => m.userId === userId);
+    if (!hasAccess) {
+      throw new ForbiddenException("You do not have access to this project");
+    }
+
+    return this.prisma.project.update({
+      where: { id: projectId },
+      data: { autoReview: settings.autoReview },
+    });
+  }
+
   async deleteProject(userId: string, projectId: string) {
     const project = await this.prisma.project.findUnique({
       where: { id: projectId },

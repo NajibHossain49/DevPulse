@@ -15,6 +15,8 @@ import { AiModule } from "./ai/ai.module";
 import { BillingModule } from "./billing/billing.module";
 import { PermissionsModule } from "./permissions/permissions.module";
 import { UsageModule } from "./usage/usage.module";
+import { WellnessModule } from "./wellness/wellness.module";
+import { AlertsModule } from "./alerts/alerts.module";
 
 @Module({
   imports: [
@@ -38,6 +40,8 @@ import { UsageModule } from "./usage/usage.module";
     BillingModule,
     PermissionsModule,
     UsageModule,
+    WellnessModule,
+    AlertsModule,
   ],
   controllers: [AppController],
   providers: [

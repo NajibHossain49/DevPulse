@@ -4,6 +4,7 @@ import type { Response } from "express";
 import * as crypto from "crypto";
 import { PrismaService } from "../prisma/prisma.service";
 import { SyncService } from "./sync.service";
+import { GithubAppService } from "./github-app.service";
 
 @ApiTags("github")
 @Controller("github/webhook")
@@ -11,6 +12,7 @@ export class WebhookController {
   constructor(
     private readonly prisma: PrismaService,
     private readonly syncService: SyncService,
+    private readonly githubAppService: GithubAppService,
   ) {}
 
   @Post()
@@ -64,7 +66,7 @@ export class WebhookController {
 
       switch (event) {
         case "pull_request":
-          await this.handlePullRequest(project.id, body);
+          await this.handlePullRequest(project, body);
           break;
         case "pull_request_review":
           await this.handlePullRequestReview(body);
@@ -81,7 +83,7 @@ export class WebhookController {
   }
 
   private async handlePullRequest(
-    projectId: string,
+    project: { id: string; autoReview: boolean },
     body: any,
   ): Promise<void> {
     const pr = body?.pull_request;
@@ -95,7 +97,7 @@ export class WebhookController {
       state: pr.merged_at ? "merged" : pr.state,
       author: pr.user?.login ?? "unknown",
       authorAvatar: pr.user?.avatar_url ?? null,
-      projectId,
+      projectId: project.id,
       createdAt,
       mergedAt: pr.merged_at ? new Date(pr.merged_at) : null,
       closedAt: pr.closed_at ? new Date(pr.closed_at) : null,
@@ -104,11 +106,17 @@ export class WebhookController {
       changedFiles: pr.changed_files ?? 0,
     };
 
+    // Upsert first so the auto-review DB update below can find the row.
     await this.prisma.pullRequest.upsert({
       where: { githubId: pr.id },
       create: { githubId: pr.id, ...data },
       update: data,
     });
+
+    // Automated AI review when a PR is freshly opened (if enabled).
+    if (body?.action === "opened" && project.autoReview) {
+      await this.githubAppService.handlePullRequestOpened(body);
+    }
   }
 
   private async handlePullRequestReview(body: any): Promise<void> {
