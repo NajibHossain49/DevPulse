@@ -36,6 +36,13 @@ export class AuthGuard implements CanActivate {
   }
 
   private extractToken(request: any): string | null {
+    // CLI / VS Code / browser extensions send the session as a Bearer token.
+    const authHeader: string | undefined = request.headers?.authorization;
+    if (authHeader?.startsWith("Bearer ")) {
+      const bearer = authHeader.slice(7).trim();
+      if (bearer) return bearer.split(".")[0];
+    }
+
     const cookieHeader: string | undefined = request.headers?.cookie;
     if (!cookieHeader) return null;
 

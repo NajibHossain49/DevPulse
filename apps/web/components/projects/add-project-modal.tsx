@@ -40,6 +40,7 @@ export function AddProjectModal({
   const [teams, setTeams] = useState<Team[]>([]);
   const [name, setName] = useState("");
   const [githubRepo, setGithubRepo] = useState("");
+  const [provider, setProvider] = useState<"github" | "gitlab">("github");
   const [teamId, setTeamId] = useState(defaultTeamId ?? "");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -58,6 +59,7 @@ export function AddProjectModal({
   const reset = () => {
     setName("");
     setGithubRepo("");
+    setProvider("github");
     setError(null);
   };
 
@@ -84,6 +86,7 @@ export function AddProjectModal({
         name: name.trim(),
         githubRepo: githubRepo.trim(),
         teamId,
+        provider,
       });
       toast.success("Project created");
 
@@ -92,7 +95,9 @@ export function AddProjectModal({
       apiPost("/github/sync", { projectId }).catch(() => {
         toast.error("Project created, but initial sync failed. Try 'Sync Now'.");
       });
-      toast.message("Syncing project data from GitHub...");
+      toast.message(
+        `Syncing project data from ${provider === "gitlab" ? "GitLab" : "GitHub"}...`,
+      );
 
       setOpen(false);
       reset();
@@ -126,7 +131,7 @@ export function AddProjectModal({
         <DialogHeader>
           <DialogTitle>Add a project</DialogTitle>
           <DialogDescription>
-            Connect a GitHub repository to start tracking analytics.
+            Connect a GitHub or GitLab repository to start tracking analytics.
           </DialogDescription>
         </DialogHeader>
 
@@ -142,10 +147,32 @@ export function AddProjectModal({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="project-repo">GitHub repository</Label>
+            <Label>Provider</Label>
+            <Select
+              value={provider}
+              onValueChange={(v) => setProvider(v as "github" | "gitlab")}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue>
+                  {(value: string | null) =>
+                    value === "gitlab" ? "GitLab" : "GitHub"
+                  }
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="github">GitHub</SelectItem>
+                <SelectItem value="gitlab">GitLab</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="project-repo">
+              {provider === "gitlab" ? "GitLab" : "GitHub"} repository
+            </Label>
             <Input
               id="project-repo"
-              placeholder="facebook/react"
+              placeholder="owner/repo"
               value={githubRepo}
               onChange={(e) => setGithubRepo(e.target.value)}
             />

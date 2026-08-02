@@ -1,11 +1,14 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   ForbiddenException,
   forwardRef,
+  Get,
   Inject,
   NotFoundException,
   Post,
+  Query,
   UseGuards,
 } from "@nestjs/common";
 import {
@@ -23,6 +26,7 @@ import { GithubService } from "../github/github.service";
 import { AnalyticsService } from "../analytics/analytics.service";
 import { AiService, PrAnalysis } from "./ai.service";
 import { AnalyzePrDto } from "./dto/analyze-pr.dto";
+import { AnalyzePrUrlDto } from "./dto/analyze-pr-url.dto";
 import { StandupDto } from "./dto/standup.dto";
 import { InsightsDto } from "./dto/insights.dto";
 import { BatchAnalyzeDto } from "./dto/batch-analyze.dto";
@@ -219,6 +223,46 @@ export class AiController {
     return { analyzed, failed };
   }
 
+  @Get("analyze-pr")
+  @UsageLimit("ai_analysis")
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
+  @ApiOperation({ summary: "Analyze a GitHub PR by owner/repo/number (browser ext)" })
+  @ApiResponse({ status: 200, description: "Success" })
+  async analyzePrByQuery(
+    @CurrentUser("id") userId: string,
+    @Query("owner") owner: string,
+    @Query("repo") repo: string,
+    @Query("pr") pr: string,
+  ) {
+    return this.analyzeByGithubRef(userId, owner, repo, pr);
+  }
+
+  @Post("analyze-pr")
+  @UsageLimit("ai_analysis")
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
+  @ApiOperation({ summary: "Analyze a GitHub PR by URL (CLI)" })
+  @ApiResponse({ status: 200, description: "Success" })
+  async analyzePrByUrl(
+    @CurrentUser("id") userId: string,
+    @Body() dto: AnalyzePrUrlDto,
+  ) {
+    if (dto.prUrl) {
+      const match = dto.prUrl.match(
+        /github\.com\/([^/]+)\/([^/]+)\/pull\/(\d+)/i,
+      );
+      if (!match) {
+        throw new BadRequestException(
+          "prUrl must look like https://github.com/owner/repo/pull/123",
+        );
+      }
+      return this.analyzeByGithubRef(userId, match[1], match[2], match[3]);
+    }
+    if (dto.owner && dto.repo && dto.pr) {
+      return this.analyzeByGithubRef(userId, dto.owner, dto.repo, dto.pr);
+    }
+    throw new BadRequestException("Provide prUrl or owner/repo/pr");
+  }
+
   @Post("sprint-predict")
   @ApiOperation({ summary: "Predict sprint completion probability" })
   @ApiResponse({ status: 200, description: "Success" })
@@ -253,6 +297,60 @@ export class AiController {
       avgReviewTime: metrics.avgReviewTime,
       daysRemaining,
     });
+  }
+
+  private async analyzeByGithubRef(
+    userId: string,
+    owner: string,
+    repo: string,
+    prNumberRaw: string,
+  ): Promise<PrAnalysis> {
+    const prNumber = parseInt(prNumberRaw, 10);
+    if (!Number.isFinite(prNumber)) {
+      throw new BadRequestException("Invalid PR number");
+    }
+
+    const githubRepo = `${owner}/${repo}`;
+    const project = await this.prisma.project.findFirst({
+      where: {
+        githubRepo: { equals: githubRepo, mode: "insensitive" },
+        team: {
+          OR: [
+            { ownerId: userId },
+            { members: { some: { userId } } },
+          ],
+        },
+      },
+    });
+    if (!project) {
+      throw new NotFoundException(
+        `No DevPulse project linked to ${githubRepo}`,
+      );
+    }
+
+    const pr = await this.prisma.pullRequest.findFirst({
+      where: { projectId: project.id, number: prNumber },
+    });
+    if (!pr) {
+      throw new NotFoundException(
+        `PR #${prNumber} not synced yet. Run Sync Now for this project.`,
+      );
+    }
+
+    const cacheKey = `ai:pr:${pr.id}`;
+    const cached = await this.redisService.get<PrAnalysis>(cacheKey);
+    if (cached) return cached;
+
+    const result = await this.runPrAnalysis(
+      project.githubRepo,
+      pr.id,
+      pr.number,
+      pr.title,
+      pr.body,
+    );
+    await this.redisService.set(cacheKey, result, PR_CACHE_TTL);
+    await this.usageService.incrementUsage(project.teamId, "ai_analysis");
+    return result;
   }
 
   private async runPrAnalysis(

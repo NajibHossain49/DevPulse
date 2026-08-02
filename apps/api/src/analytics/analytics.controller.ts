@@ -6,6 +6,7 @@ import {
   ApiBearerAuth,
 } from "@nestjs/swagger";
 import { AuthGuard } from "../auth/auth.guard";
+import { CurrentUser } from "../auth/auth.decorator";
 import { AnalyticsService, ProjectMetrics } from "./analytics.service";
 import { DoraService } from "./dora.service";
 import { RedisService } from "../redis/redis.service";
@@ -104,6 +105,109 @@ export class AnalyticsController {
       projectId,
       Number.isFinite(parsedWeeks) && parsedWeeks > 0 ? parsedWeeks : 4,
     );
+  }
+
+  @Get("personal")
+  @ApiOperation({ summary: "Personal development stats for the current user" })
+  @ApiResponse({ status: 200, description: "Success" })
+  @ApiResponse({ status: 401, description: "Unauthorized" })
+  async getPersonalStats(
+    @CurrentUser() user: { id: string; name?: string | null; email: string },
+    @Query("projectId") projectId?: string,
+    @Query("days") days = "7",
+  ) {
+    const parsedDays = Math.max(1, parseInt(days, 10) || 7);
+    const since = new Date(Date.now() - parsedDays * DAY_MS);
+    const candidates = [user.name, user.email.split("@")[0]]
+      .filter((v): v is string => !!v)
+      .map((v) => v.toLowerCase());
+
+    const projectFilter = projectId
+      ? { projectId }
+      : {
+          project: {
+            team: {
+              OR: [
+                { ownerId: user.id },
+                { members: { some: { userId: user.id } } },
+              ],
+            },
+          },
+        };
+
+    const [commits, prs] = await Promise.all([
+      this.prisma.commit.findMany({
+        where: { ...projectFilter, createdAt: { gte: since } },
+      }),
+      this.prisma.pullRequest.findMany({
+        where: { ...projectFilter, createdAt: { gte: since } },
+      }),
+    ]);
+
+    const myCommits = commits.filter((c) =>
+      candidates.includes((c.author ?? "").toLowerCase()),
+    );
+    const myPrs = prs.filter((p) =>
+      candidates.includes((p.author ?? "").toLowerCase()),
+    );
+    const reviewTimes = myPrs
+      .map((p) => p.reviewTime)
+      .filter((v): v is number => v !== null);
+
+    return {
+      commits: myCommits.length,
+      prsOpened: myPrs.length,
+      prsMerged: myPrs.filter((p) => p.state === "merged").length,
+      avgReviewTime:
+        reviewTimes.length > 0
+          ? Math.round(
+              reviewTimes.reduce((a, b) => a + b, 0) / reviewTimes.length,
+            )
+          : null,
+      linesAdded: myCommits.reduce((sum, c) => sum + c.additions, 0),
+      linesDeleted: myCommits.reduce((sum, c) => sum + c.deletions, 0),
+    };
+  }
+
+  @Get("quick-stats")
+  @ApiOperation({ summary: "Quick stats for browser extension popup" })
+  @ApiResponse({ status: 200, description: "Success" })
+  @ApiResponse({ status: 401, description: "Unauthorized" })
+  async getQuickStats(
+    @CurrentUser() user: { id: string; name?: string | null; email: string },
+  ) {
+    const startOfDay = new Date();
+    startOfDay.setHours(0, 0, 0, 0);
+    const candidates = [user.name, user.email.split("@")[0]]
+      .filter((v): v is string => !!v)
+      .map((v) => v.toLowerCase());
+
+    const teamFilter = {
+      project: {
+        team: {
+          OR: [
+            { ownerId: user.id },
+            { members: { some: { userId: user.id } } },
+          ],
+        },
+      },
+    };
+
+    const [commits, openPrs] = await Promise.all([
+      this.prisma.commit.findMany({
+        where: { ...teamFilter, createdAt: { gte: startOfDay } },
+        select: { author: true },
+      }),
+      this.prisma.pullRequest.count({
+        where: { ...teamFilter, state: "open" },
+      }),
+    ]);
+
+    const commitsToday = commits.filter((c) =>
+      candidates.includes((c.author ?? "").toLowerCase()),
+    ).length;
+
+    return { commitsToday, openPRs: openPrs };
   }
 
   @Get("timeline")

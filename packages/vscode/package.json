@@ -1,0 +1,84 @@
+{
+  "name": "devpulse-vscode",
+  "displayName": "DevPulse",
+  "description": "Developer analytics in VS Code",
+  "version": "0.1.0",
+  "publisher": "devpulse",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": ["Other"],
+  "activationEvents": ["onStartupFinished"],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "devpulse.standup",
+        "title": "Generate Standup",
+        "category": "DevPulse"
+      },
+      {
+        "command": "devpulse.stats",
+        "title": "Show My Stats",
+        "category": "DevPulse"
+      },
+      {
+        "command": "devpulse.openDashboard",
+        "title": "Open Dashboard",
+        "category": "DevPulse"
+      },
+      {
+        "command": "devpulse.refresh",
+        "title": "Refresh",
+        "category": "DevPulse"
+      }
+    ],
+    "views": {
+      "explorer": [
+        {
+          "id": "devpulse.sidebar",
+          "name": "DevPulse"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "DevPulse",
+      "properties": {
+        "devpulse.apiKey": {
+          "type": "string",
+          "default": "",
+          "description": "Your DevPulse session token"
+        },
+        "devpulse.apiUrl": {
+          "type": "string",
+          "default": "http://localhost:3001",
+          "description": "DevPulse API URL"
+        },
+        "devpulse.projectId": {
+          "type": "string",
+          "default": "",
+          "description": "Default project ID for standup/stats"
+        },
+        "devpulse.userEmail": {
+          "type": "string",
+          "default": "",
+          "description": "Your account email for standup generation"
+        },
+        "devpulse.dashboardUrl": {
+          "type": "string",
+          "default": "http://localhost:3000/dashboard",
+          "description": "DevPulse dashboard URL"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "package": "vsce package"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/vscode": "^1.85.0",
+    "typescript": "^5.7.0"
+  }
+}

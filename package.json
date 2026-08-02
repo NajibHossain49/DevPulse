@@ -7,7 +7,9 @@
     "db:generate": "turbo run db:generate",
     "db:push": "turbo run db:push",
     "lint": "turbo run lint",
-    "typecheck": "turbo run typecheck"
+    "typecheck": "turbo run typecheck",
+    "cli:build": "turbo run build --filter=@devpulse/cli",
+    "cli:dev": "pnpm --filter @devpulse/cli dev"
   },
   "devDependencies": {
     "turbo": "^2.3.0",

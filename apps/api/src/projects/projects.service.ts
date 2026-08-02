@@ -3,25 +3,37 @@ import {
   NotFoundException,
   ForbiddenException,
   BadRequestException,
+  Inject,
 } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
-import { GithubService } from "../github/github.service";
+import {
+  GIT_PROVIDER,
+  GitProvider,
+  GitProviderMap,
+} from "../github/git-provider.interface";
 import { CreateProjectDto } from "./dto/create-project.dto";
 
 @Injectable()
 export class ProjectsService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly github: GithubService,
+    @Inject(GIT_PROVIDER)
+    private readonly providers: GitProviderMap,
   ) {}
+
+  private getProvider(type: string | undefined): GitProvider {
+    return type === "gitlab" ? this.providers.gitlab : this.providers.github;
+  }
 
   async createProject(userId: string, dto: CreateProjectDto) {
     await this.assertTeamAccess(userId, dto.teamId);
 
-    const repoExists = await this.github.validateRepo(dto.githubRepo);
+    const providerType = dto.provider || "github";
+    const provider = this.getProvider(providerType);
+    const repoExists = await provider.validateRepo(dto.githubRepo);
     if (!repoExists) {
       throw new BadRequestException(
-        `GitHub repository "${dto.githubRepo}" was not found or is not accessible`,
+        `${providerType === "gitlab" ? "GitLab" : "GitHub"} repository "${dto.githubRepo}" was not found or is not accessible`,
       );
     }
 
@@ -30,6 +42,7 @@ export class ProjectsService {
         name: dto.name,
         githubRepo: dto.githubRepo,
         teamId: dto.teamId,
+        provider: providerType,
       },
     });
   }

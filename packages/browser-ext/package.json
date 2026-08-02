@@ -1,0 +1,14 @@
+{
+  "name": "@devpulse/browser-ext",
+  "version": "0.1.0",
+  "private": true,
+  "description": "DevPulse for GitHub — browser extension",
+  "scripts": {
+    "build": "tsc && node ./scripts/copy-assets.mjs",
+    "dev": "tsc --watch"
+  },
+  "devDependencies": {
+    "@types/chrome": "^0.0.287",
+    "typescript": "^5.7.0"
+  }
+}

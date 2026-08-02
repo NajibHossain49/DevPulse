@@ -23,6 +23,8 @@ import { CommentsModule } from "./comments/comments.module";
 import { BenchmarksModule } from "./benchmarks/benchmarks.module";
 import { GoalsModule } from "./goals/goals.module";
 import { ReportsModule } from "./reports/reports.module";
+import { IntegrationsModule } from "./integrations/integrations.module";
+import { GitlabModule } from "./gitlab/gitlab.module";
 
 @Module({
   imports: [
@@ -40,6 +42,8 @@ import { ReportsModule } from "./reports/reports.module";
     TeamsModule,
     ProjectsModule,
     GithubModule,
+    GitlabModule,
+    IntegrationsModule,
     RedisModule,
     AnalyticsModule,
     AiModule,

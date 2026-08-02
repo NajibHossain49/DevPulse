@@ -1,0 +1,23 @@
+{
+  "manifest_version": 3,
+  "name": "DevPulse for GitHub",
+  "version": "0.1.0",
+  "description": "AI-powered code quality insights on GitHub PRs",
+  "permissions": ["storage", "activeTab"],
+  "host_permissions": [
+    "https://github.com/*",
+    "http://localhost:3001/*",
+    "http://localhost:3000/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["https://github.com/*/pull/*"],
+      "js": ["content.js"],
+      "css": ["styles.css"]
+    }
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "DevPulse"
+  }
+}

@@ -1,4 +1,12 @@
-import { IsString, MinLength, MaxLength, Matches, IsNotEmpty } from "class-validator";
+import {
+  IsString,
+  MinLength,
+  MaxLength,
+  Matches,
+  IsNotEmpty,
+  IsOptional,
+  IsIn,
+} from "class-validator";
 
 export class CreateProjectDto {
   @IsString()
@@ -17,4 +25,8 @@ export class CreateProjectDto {
   @IsString()
   @IsNotEmpty()
   teamId: string;
+
+  @IsOptional()
+  @IsIn(["github", "gitlab"])
+  provider?: "github" | "gitlab";
 }

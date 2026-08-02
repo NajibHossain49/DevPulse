@@ -1,6 +1,12 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
 import { GithubService } from "./github.service";
+import { GitlabProvider } from "../gitlab/gitlab.provider";
+import {
+  GitProvider,
+  NormalizedCommit,
+  NormalizedPullRequest,
+} from "./git-provider.interface";
 
 const MAX_PAGES = 10;
 const PER_PAGE = 100;
@@ -18,8 +24,13 @@ export class SyncService {
 
   constructor(
     private readonly github: GithubService,
+    private readonly gitlab: GitlabProvider,
     private readonly prisma: PrismaService,
   ) {}
+
+  private getProvider(type: string | null | undefined): GitProvider {
+    return type === "gitlab" ? this.gitlab : this.github;
+  }
 
   async syncProject(projectId: string): Promise<SyncSummary> {
     const summary: SyncSummary = {
@@ -38,9 +49,10 @@ export class SyncService {
     }
 
     const repo = project.githubRepo;
+    const provider = this.getProvider(project.provider);
 
-    await this.syncPullRequests(project.id, repo, summary);
-    await this.syncCommits(project.id, repo, summary);
+    await this.syncPullRequests(project.id, repo, provider, summary);
+    await this.syncCommits(project.id, repo, provider, summary);
 
     await this.prisma.project.update({
       where: { id: project.id },
@@ -53,16 +65,17 @@ export class SyncService {
   private async syncPullRequests(
     projectId: string,
     repo: string,
+    provider: GitProvider,
     summary: SyncSummary,
   ): Promise<void> {
     try {
       for (let page = 1; page <= MAX_PAGES; page++) {
-        const prs = await this.github.getPullRequests(repo, "all", page);
+        const prs = await provider.getPullRequests(repo, "all", page);
         if (prs.length === 0) break;
 
         for (const pr of prs) {
           try {
-            await this.upsertPullRequest(projectId, repo, pr);
+            await this.upsertPullRequest(projectId, repo, provider, pr);
             summary.prsSynced++;
           } catch (error) {
             summary.errors.push(`PR #${pr.number}: ${errMessage(error)}`);
@@ -79,12 +92,13 @@ export class SyncService {
   private async upsertPullRequest(
     projectId: string,
     repo: string,
-    pr: any,
+    provider: GitProvider,
+    pr: NormalizedPullRequest,
   ): Promise<void> {
-    const reviews = await this.github.getPullRequestReviews(repo, pr.number);
+    const reviews = await provider.getPullRequestReviews(repo, pr.number);
     const firstReviewAt = earliestReviewDate(reviews);
 
-    const files = await this.github.getPullRequestFiles(repo, pr.number);
+    const files = await provider.getPullRequestFiles(repo, pr.number);
     const additions = sumBy(files, (f) => f.additions ?? 0);
     const deletions = sumBy(files, (f) => f.deletions ?? 0);
     const changedFiles = files.length;
@@ -122,6 +136,7 @@ export class SyncService {
   private async syncCommits(
     projectId: string,
     repo: string,
+    provider: GitProvider,
     summary: SyncSummary,
   ): Promise<void> {
     const since = new Date(
@@ -130,7 +145,7 @@ export class SyncService {
 
     try {
       for (let page = 1; page <= MAX_PAGES; page++) {
-        const commits = await this.github.getCommits(repo, since, page);
+        const commits = await provider.getCommits(repo, since, page);
         if (commits.length === 0) break;
 
         for (const commit of commits) {
@@ -151,11 +166,13 @@ export class SyncService {
     }
   }
 
-  private async upsertCommit(projectId: string, commit: any): Promise<void> {
+  private async upsertCommit(
+    projectId: string,
+    commit: NormalizedCommit,
+  ): Promise<void> {
     const data = {
       message: commit.commit?.message ?? "",
-      author:
-        commit.author?.login ?? commit.commit?.author?.name ?? "unknown",
+      author: commit.author?.login ?? commit.commit?.author?.name ?? "unknown",
       authorAvatar: commit.author?.avatar_url ?? null,
       projectId,
       createdAt: commit.commit?.author?.date
@@ -171,10 +188,12 @@ export class SyncService {
   }
 }
 
-function earliestReviewDate(reviews: any[]): Date | null {
+function earliestReviewDate(
+  reviews: { submitted_at: string | null }[],
+): Date | null {
   const dates = reviews
     .filter((r) => r.submitted_at)
-    .map((r) => new Date(r.submitted_at))
+    .map((r) => new Date(r.submitted_at as string))
     .sort((a, b) => a.getTime() - b.getTime());
   return dates[0] ?? null;
 }
