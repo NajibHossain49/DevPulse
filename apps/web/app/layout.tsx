@@ -5,7 +5,10 @@ import { cn } from "@/lib/utils";
 import { Toaster } from "@/components/ui/sonner";
 import PWAInstallPrompt from "@/components/pwa/install-prompt";
 
-const geist = Geist({ subsets: ["latin"], variable: "--font-sans" });
+const geist = Geist({
+  subsets: ["latin"],
+  variable: "--font-geist",
+});
 
 export const metadata: Metadata = {
   title: "DevPulse — AI-Powered Developer Analytics",
@@ -27,7 +30,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#3b82f6",
+  themeColor: "#0f1c24",
 };
 
 export default function RootLayout({
@@ -36,7 +39,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={cn("dark font-sans", geist.variable)}>
+    <html lang="en" className={cn("font-sans", geist.variable)}>
       <body className="antialiased">
         {children}
         <Toaster position="top-right" richColors />

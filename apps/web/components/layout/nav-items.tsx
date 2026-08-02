@@ -44,7 +44,20 @@ export const NAV_ITEMS: NavItem[] = [
 
 function isActive(pathname: string, href: string): boolean {
   if (href === "/dashboard") return pathname === "/dashboard";
-  return pathname === href || pathname.startsWith(`${href}/`);
+
+  const matches =
+    pathname === href || pathname.startsWith(`${href}/`);
+  if (!matches) return false;
+
+  // Prefer the most specific nav item (e.g. /settings/billing over /settings).
+  const hasMoreSpecificMatch = NAV_ITEMS.some(
+    (item) =>
+      item.href !== href &&
+      item.href.length > href.length &&
+      (pathname === item.href || pathname.startsWith(`${item.href}/`)),
+  );
+
+  return !hasMoreSpecificMatch;
 }
 
 export function NavLinks({

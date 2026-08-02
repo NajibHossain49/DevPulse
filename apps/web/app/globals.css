@@ -5,7 +5,7 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme {
-  --font-sans: ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-geist), ui-sans-serif, system-ui, sans-serif;
 }
 
 @theme inline {
@@ -44,6 +44,8 @@
   --color-background: var(--background);
   --color-brand-from: var(--brand-from);
   --color-brand-to: var(--brand-to);
+  --color-ink: var(--ink);
+  --color-surface: var(--surface);
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -53,77 +55,83 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
+/* Light marketing: soft slate-mist (not flat white) + teal pulse */
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.55 0.22 285);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.55 0.22 285);
-  --brand-from: oklch(0.62 0.19 255);
-  --brand-to: oklch(0.55 0.25 300);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
+  --background: oklch(0.955 0.018 215);
+  --foreground: oklch(0.24 0.035 230);
+  --card: oklch(0.985 0.01 210 / 0.88);
+  --card-foreground: oklch(0.24 0.035 230);
+  --popover: oklch(0.985 0.01 210);
+  --popover-foreground: oklch(0.24 0.035 230);
+  --primary: oklch(0.5 0.11 195);
+  --primary-foreground: oklch(0.99 0.01 195);
+  --secondary: oklch(0.92 0.025 210);
+  --secondary-foreground: oklch(0.28 0.04 230);
+  --muted: oklch(0.93 0.02 215);
+  --muted-foreground: oklch(0.45 0.03 230);
+  --accent: oklch(0.91 0.035 195);
+  --accent-foreground: oklch(0.28 0.05 200);
+  --destructive: oklch(0.55 0.2 25);
+  --border: oklch(0.84 0.03 215);
+  --input: oklch(0.9 0.02 215);
+  --ring: oklch(0.5 0.11 195);
+  --brand-from: oklch(0.55 0.12 195);
+  --brand-to: oklch(0.42 0.09 220);
+  --ink: oklch(0.22 0.04 230);
+  --surface: oklch(0.935 0.022 215);
+  --chart-1: oklch(0.55 0.12 195);
+  --chart-2: oklch(0.58 0.1 160);
+  --chart-3: oklch(0.52 0.08 230);
+  --chart-4: oklch(0.68 0.08 85);
+  --chart-5: oklch(0.42 0.04 230);
   --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --sidebar: oklch(0.945 0.018 215);
+  --sidebar-foreground: oklch(0.24 0.035 230);
+  --sidebar-primary: oklch(0.5 0.11 195);
+  --sidebar-primary-foreground: oklch(0.99 0.01 195);
+  --sidebar-accent: oklch(0.91 0.03 195);
+  --sidebar-accent-foreground: oklch(0.28 0.05 200);
+  --sidebar-border: oklch(0.84 0.03 215);
+  --sidebar-ring: oklch(0.5 0.11 195);
 }
 
+/* Dashboard app shell */
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.62 0.21 285);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
+  --background: oklch(0.17 0.02 230);
+  --foreground: oklch(0.96 0.01 210);
+  --card: oklch(0.22 0.025 230);
+  --card-foreground: oklch(0.96 0.01 210);
+  --popover: oklch(0.22 0.025 230);
+  --popover-foreground: oklch(0.96 0.01 210);
+  --primary: oklch(0.72 0.12 195);
+  --primary-foreground: oklch(0.16 0.03 230);
+  --secondary: oklch(0.28 0.025 230);
+  --secondary-foreground: oklch(0.96 0.01 210);
+  --muted: oklch(0.28 0.02 230);
+  --muted-foreground: oklch(0.72 0.02 210);
+  --accent: oklch(0.3 0.04 195);
+  --accent-foreground: oklch(0.96 0.01 210);
+  --destructive: oklch(0.65 0.18 22);
   --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.62 0.21 285);
-  --brand-from: oklch(0.65 0.19 255);
-  --brand-to: oklch(0.62 0.25 300);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --input: oklch(1 0 0 / 12%);
+  --ring: oklch(0.72 0.12 195);
+  --brand-from: oklch(0.7 0.12 195);
+  --brand-to: oklch(0.55 0.1 220);
+  --ink: oklch(0.96 0.01 210);
+  --surface: oklch(0.2 0.025 230);
+  --chart-1: oklch(0.72 0.12 195);
+  --chart-2: oklch(0.7 0.1 160);
+  --chart-3: oklch(0.65 0.08 230);
+  --chart-4: oklch(0.75 0.1 85);
+  --chart-5: oklch(0.55 0.03 230);
+  --sidebar: oklch(0.19 0.025 230);
+  --sidebar-foreground: oklch(0.96 0.01 210);
+  --sidebar-primary: oklch(0.72 0.12 195);
+  --sidebar-primary-foreground: oklch(0.16 0.03 230);
+  --sidebar-accent: oklch(0.28 0.035 195);
+  --sidebar-accent-foreground: oklch(0.96 0.01 210);
   --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --sidebar-ring: oklch(0.72 0.12 195);
 }
 
 @layer base {
@@ -139,6 +147,94 @@
   a,
   button {
     @apply transition-colors duration-150;
+  }
+}
+
+/* Marketing atmosphere — dark-first (matches product shell) */
+.marketing-shell {
+  background:
+    radial-gradient(ellipse 70% 45% at 12% 0%, oklch(0.45 0.1 195 / 0.28), transparent 55%),
+    radial-gradient(ellipse 55% 40% at 90% 18%, oklch(0.4 0.08 160 / 0.18), transparent 50%),
+    radial-gradient(ellipse 50% 35% at 50% 100%, oklch(0.35 0.06 230 / 0.22), transparent 55%),
+    oklch(0.16 0.025 230);
+}
+
+.marketing-grid {
+  background-image:
+    linear-gradient(oklch(0.72 0.12 195 / 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, oklch(0.72 0.12 195 / 0.08) 1px, transparent 1px);
+  background-size: 56px 56px;
+  mask-image: radial-gradient(ellipse 85% 70% at 50% 20%, black 20%, transparent 78%);
+}
+
+.marketing-aurora {
+  background:
+    radial-gradient(ellipse 60% 50% at 20% 10%, oklch(0.55 0.12 195 / 0.32), transparent 60%),
+    radial-gradient(ellipse 50% 40% at 85% 20%, oklch(0.5 0.08 160 / 0.2), transparent 55%),
+    radial-gradient(ellipse 40% 30% at 50% 80%, oklch(0.45 0.06 220 / 0.16), transparent 50%);
+}
+
+.marketing-panel {
+  background:
+    linear-gradient(
+      165deg,
+      oklch(0.24 0.03 230 / 0.92),
+      oklch(0.2 0.025 230 / 0.88)
+    );
+  box-shadow:
+    0 1px 0 oklch(1 0 0 / 0.06) inset,
+    0 22px 48px -30px oklch(0 0 0 / 0.55);
+  border: 1px solid oklch(1 0 0 / 0.08);
+}
+
+@keyframes marketing-rise {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes marketing-drift {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(0, -8px, 0);
+  }
+}
+
+@keyframes marketing-pulse-line {
+  0% {
+    stroke-dashoffset: 240;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+.animate-marketing-rise {
+  animation: marketing-rise 0.7s ease-out both;
+}
+
+.animate-marketing-drift {
+  animation: marketing-drift 8s ease-in-out infinite;
+}
+
+.animate-marketing-pulse-line {
+  stroke-dasharray: 240;
+  animation: marketing-pulse-line 2.4s ease-out forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-marketing-rise,
+  .animate-marketing-drift,
+  .animate-marketing-pulse-line {
+    animation: none;
   }
 }
 

@@ -1,6 +1,7 @@
 "use client";
 
-import { Github, CheckCircle2, Zap } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Github, CheckCircle2, Zap, Mail } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
 import {
   Card,
@@ -14,6 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
+import PasswordSettings from "@/components/auth/password-settings";
 
 function initials(name?: string | null, email?: string | null): string {
   if (name) {
@@ -30,6 +32,28 @@ function initials(name?: string | null, email?: string | null): string {
 export default function SettingsPage() {
   const { data: session, isPending } = authClient.useSession();
   const user = session?.user;
+  const [providers, setProviders] = useState<string[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function loadAccounts() {
+      try {
+        const { data } = await authClient.listAccounts();
+        if (cancelled) return;
+        const accounts = Array.isArray(data) ? data : [];
+        setProviders(accounts.map((account) => account.providerId));
+      } catch {
+        if (!cancelled) setProviders([]);
+      }
+    }
+    void loadAccounts();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const hasGithub = providers.includes("github");
+  const hasCredential = providers.includes("credential");
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
@@ -77,12 +101,36 @@ export default function SettingsPage() {
         </CardContent>
       </Card>
 
+      <PasswordSettings />
+
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Connected Accounts</CardTitle>
-          <CardDescription>Manage your linked integrations.</CardDescription>
+          <CardDescription>Manage your linked sign-in methods.</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-3">
+          <div className="flex items-center justify-between rounded-lg border p-4">
+            <div className="flex items-center gap-3">
+              <div className="flex size-9 items-center justify-center rounded-lg bg-muted">
+                <Mail className="size-5" />
+              </div>
+              <div>
+                <p className="text-sm font-medium">Email &amp; Password</p>
+                <p className="text-xs text-muted-foreground">
+                  Sign in with your email address.
+                </p>
+              </div>
+            </div>
+            {hasCredential ? (
+              <Badge className="bg-green-500/15 text-green-500">
+                <CheckCircle2 className="size-3" />
+                Connected
+              </Badge>
+            ) : (
+              <Badge variant="secondary">Not set</Badge>
+            )}
+          </div>
+
           <div className="flex items-center justify-between rounded-lg border p-4">
             <div className="flex items-center gap-3">
               <div className="flex size-9 items-center justify-center rounded-lg bg-muted">
@@ -95,10 +143,14 @@ export default function SettingsPage() {
                 </p>
               </div>
             </div>
-            <Badge className="bg-green-500/15 text-green-500">
-              <CheckCircle2 className="size-3" />
-              Connected
-            </Badge>
+            {hasGithub ? (
+              <Badge className="bg-green-500/15 text-green-500">
+                <CheckCircle2 className="size-3" />
+                Connected
+              </Badge>
+            ) : (
+              <Badge variant="secondary">Not connected</Badge>
+            )}
           </div>
         </CardContent>
       </Card>

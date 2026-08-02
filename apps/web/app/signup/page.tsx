@@ -4,24 +4,24 @@ import Link from "next/link";
 import AuthForm from "@/components/auth/auth-form";
 import { AuthShell } from "@/components/auth/auth-shell";
 
-export default function LoginPage() {
+export default function SignUpPage() {
   return (
     <AuthShell
-      title="Welcome back"
-      description="Sign in with email and password, or continue with GitHub to open your workspace."
+      title="Create your workspace"
+      description="Start free with email and password, or jump in with GitHub in one click."
       footer={
         <>
-          New to DevPulse?{" "}
+          Already have an account?{" "}
           <Link
-            href="/signup"
+            href="/login"
             className="font-medium text-foreground underline-offset-4 hover:underline"
           >
-            Create an account
+            Sign in
           </Link>
         </>
       }
     >
-      <AuthForm defaultMode="signin" />
+      <AuthForm defaultMode="signup" />
     </AuthShell>
   );
 }

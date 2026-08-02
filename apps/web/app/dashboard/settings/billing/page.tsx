@@ -234,52 +234,62 @@ export default function BillingPage() {
       </div>
 
       {/* Pricing Plans */}
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid items-stretch gap-4 md:grid-cols-3">
         {plans.map((plan) => (
-          <Card key={plan.name} className={plan.current ? "border-primary" : ""}>
-            <CardHeader>
-              <div className="flex items-center justify-between">
+          <Card
+            key={plan.name}
+            className={`flex h-full flex-col ${plan.current ? "border-primary" : ""}`}
+          >
+            <CardHeader className="space-y-3">
+              <div className="flex min-h-7 items-center justify-between gap-2">
                 <CardTitle>{plan.name}</CardTitle>
-                {plan.current && <Badge>Current</Badge>}
+                {plan.current ? <Badge>Current</Badge> : <span className="h-5" />}
               </div>
-              <CardDescription>{plan.description}</CardDescription>
-              <div className="mt-4 text-3xl font-bold">
+              <CardDescription className="min-h-10">
+                {plan.description}
+              </CardDescription>
+              <div className="text-3xl font-bold">
                 {plan.price}
                 <span className="text-lg font-normal text-muted-foreground">
                   /mo
                 </span>
               </div>
             </CardHeader>
-            <CardContent>
-              <ul className="mb-6 space-y-2">
+            <CardContent className="flex flex-1 flex-col">
+              <ul className="flex-1 space-y-2">
                 {plan.features.map((feature) => (
                   <li
                     key={feature}
                     className="flex items-center gap-2 text-sm"
                   >
-                    <CheckCircle className="h-4 w-4 text-green-500" />
+                    <CheckCircle className="h-4 w-4 shrink-0 text-green-500" />
                     {feature}
                   </li>
                 ))}
               </ul>
-              {!plan.current && plan.name !== "Free" && (
-                <Button
-                  className="w-full"
-                  onClick={() =>
-                    handleUpgrade(
-                      plan.name.toLowerCase() as "pro" | "enterprise",
-                    )
-                  }
-                  disabled={loading}
-                >
-                  {loading ? "Loading..." : `Upgrade to ${plan.name}`}
-                </Button>
-              )}
-              {plan.current && (
-                <Button variant="outline" className="w-full" disabled>
-                  Current Plan
-                </Button>
-              )}
+              <div className="mt-6">
+                {plan.current ? (
+                  <Button variant="outline" className="w-full" disabled>
+                    Current Plan
+                  </Button>
+                ) : plan.name === "Free" ? (
+                  <Button variant="outline" className="w-full" disabled>
+                    Included
+                  </Button>
+                ) : (
+                  <Button
+                    className="w-full"
+                    onClick={() =>
+                      handleUpgrade(
+                        plan.name.toLowerCase() as "pro" | "enterprise",
+                      )
+                    }
+                    disabled={loading}
+                  >
+                    {loading ? "Loading..." : `Upgrade to ${plan.name}`}
+                  </Button>
+                )}
+              </div>
             </CardContent>
           </Card>
         ))}

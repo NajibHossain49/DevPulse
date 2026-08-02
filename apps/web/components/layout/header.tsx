@@ -234,11 +234,13 @@ function AlertsBell() {
 }
 
 function deriveTitle(pathname: string): string {
-  const match = NAV_ITEMS.find((item) =>
+  const matches = NAV_ITEMS.filter((item) =>
     item.href === "/dashboard"
       ? pathname === "/dashboard"
-      : pathname.startsWith(item.href),
+      : pathname === item.href || pathname.startsWith(`${item.href}/`),
   );
+  // Longest href wins so /settings/billing → Billing, not Settings.
+  const match = matches.sort((a, b) => b.href.length - a.href.length)[0];
   return match?.label ?? "Dashboard";
 }
 
