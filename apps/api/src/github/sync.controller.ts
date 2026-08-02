@@ -17,6 +17,7 @@ import { CurrentUser } from "../auth/auth.decorator";
 import { PrismaService } from "../prisma/prisma.service";
 import { SyncService } from "./sync.service";
 import { SyncProjectDto } from "./dto/sync-project.dto";
+import { EventsGateway } from "../events/events.gateway";
 
 @ApiTags("github")
 @ApiBearerAuth()
@@ -26,6 +27,7 @@ export class SyncController {
   constructor(
     private readonly syncService: SyncService,
     private readonly prisma: PrismaService,
+    private readonly eventsGateway: EventsGateway,
   ) {}
 
   @Post("sync")
@@ -55,6 +57,14 @@ export class SyncController {
       throw new ForbiddenException("You do not have access to this project");
     }
 
-    return this.syncService.syncProject(dto.projectId);
+    const result = await this.syncService.syncProject(dto.projectId);
+
+    this.eventsGateway.emitToProject(dto.projectId, "sync_completed", {
+      prsSynced: result.prsSynced,
+      commitsSynced: result.commitsSynced,
+      timestamp: new Date().toISOString(),
+    });
+
+    return result;
   }
 }

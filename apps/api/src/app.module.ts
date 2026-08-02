@@ -17,6 +17,9 @@ import { PermissionsModule } from "./permissions/permissions.module";
 import { UsageModule } from "./usage/usage.module";
 import { WellnessModule } from "./wellness/wellness.module";
 import { AlertsModule } from "./alerts/alerts.module";
+import { EventsModule } from "./events/events.module";
+import { SlackModule } from "./slack/slack.module";
+import { CommentsModule } from "./comments/comments.module";
 
 @Module({
   imports: [
@@ -42,6 +45,9 @@ import { AlertsModule } from "./alerts/alerts.module";
     UsageModule,
     WellnessModule,
     AlertsModule,
+    EventsModule,
+    SlackModule,
+    CommentsModule,
   ],
   controllers: [AppController],
   providers: [

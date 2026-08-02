@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
+import PRComments from "@/components/dashboard/pr-comments";
 
 function scoreColor(score: number): string {
   if (score > 70) return "#22c55e";
@@ -94,7 +95,7 @@ export function AiAnalysisModal({
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-lg">
         <DialogHeader>
           <DialogTitle className="pr-6 leading-snug">
             {pr?.title ?? "PR Analysis"}
@@ -137,6 +138,12 @@ export function AiAnalysisModal({
             )}
           </div>
         ) : null}
+
+        {pr && (
+          <div className="mt-6 border-t pt-4">
+            <PRComments prId={pr.id} />
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );

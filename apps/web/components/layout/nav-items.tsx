@@ -8,6 +8,7 @@ import {
   Users,
   Heart,
   CreditCard,
+  Plug,
   Settings,
   type LucideIcon,
 } from "lucide-react";
@@ -25,6 +26,11 @@ export const NAV_ITEMS: NavItem[] = [
   { label: "Teams", href: "/dashboard/teams", icon: Users },
   { label: "Wellness", href: "/dashboard/team/wellness", icon: Heart },
   { label: "Billing", href: "/dashboard/settings/billing", icon: CreditCard },
+  {
+    label: "Integrations",
+    href: "/dashboard/settings/integrations",
+    icon: Plug,
+  },
   { label: "Settings", href: "/dashboard/settings", icon: Settings },
 ];
 

@@ -5,6 +5,7 @@ import * as crypto from "crypto";
 import { PrismaService } from "../prisma/prisma.service";
 import { SyncService } from "./sync.service";
 import { GithubAppService } from "./github-app.service";
+import { EventsGateway } from "../events/events.gateway";
 
 @ApiTags("github")
 @Controller("github/webhook")
@@ -13,6 +14,7 @@ export class WebhookController {
     private readonly prisma: PrismaService,
     private readonly syncService: SyncService,
     private readonly githubAppService: GithubAppService,
+    private readonly eventsGateway: EventsGateway,
   ) {}
 
   @Post()
@@ -76,6 +78,28 @@ export class WebhookController {
           break;
         default:
           break;
+      }
+
+      // Broadcast a real-time event to connected clients.
+      if (event === "pull_request" || event === "push") {
+        this.eventsGateway.emitToProject(project.id, "activity", {
+          type: event,
+          action: body?.action,
+          projectId: project.id,
+          data: {
+            prTitle: body?.pull_request?.title,
+            author: body?.pull_request?.user?.login ?? body?.sender?.login,
+            timestamp: new Date().toISOString(),
+          },
+        });
+        this.eventsGateway.emitToTeam(project.teamId, "notification", {
+          type: "pr_update",
+          message:
+            event === "pull_request"
+              ? `PR "${body?.pull_request?.title ?? ""}" was ${body?.action ?? "updated"}`
+              : "New commits were pushed",
+          projectId: project.id,
+        });
       }
     } catch {
       // Swallow errors: the webhook was already acknowledged with 200.

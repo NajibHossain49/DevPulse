@@ -35,6 +35,7 @@ model User {
   accounts      Account[]
   sessions      Session[]
   activities    Activity[]
+  comments      Comment[]
 }
 
 model Account {
@@ -167,6 +168,7 @@ model PullRequest {
   aiSummary      String?   @db.Text
   aiQualityScore Int?
   commits        Commit[]
+  comments       Comment[]
 }
 
 model Commit {
@@ -208,4 +210,18 @@ model Activity {
   type      String
   metadata  Json?
   createdAt DateTime @default(now())
+}
+
+model Comment {
+  id        String      @id @default(cuid())
+  prId      String
+  pr        PullRequest @relation(fields: [prId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  content   String      @db.Text
+  parentId  String? // for threaded replies
+  parent    Comment?    @relation("CommentReplies", fields: [parentId], references: [id])
+  replies   Comment[]   @relation("CommentReplies")
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
 }

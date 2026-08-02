@@ -11,6 +11,7 @@ import { SprintPredictor } from "@/components/dashboard/sprint-predictor";
 import { PrTable } from "@/components/dashboard/pr-table";
 import { PullRequestsPanel } from "@/components/dashboard/pull-requests-panel";
 import { AnalyticsPanel } from "@/components/dashboard/analytics-panel";
+import ActivityFeed from "@/components/activity/activity-feed";
 
 export default function ProjectDetailPage({
   params,
@@ -38,7 +39,10 @@ export default function ProjectDetailPage({
             <StandupGenerator projectId={id} />
           </div>
 
-          <SprintPredictor projectId={id} />
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+            <SprintPredictor projectId={id} />
+            <ActivityFeed projectId={id} />
+          </div>
 
           <Card>
             <CardHeader>
