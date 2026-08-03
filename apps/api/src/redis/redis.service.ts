@@ -4,16 +4,23 @@ import { Redis } from "@upstash/redis";
 @Injectable()
 export class RedisService {
   private readonly logger = new Logger(RedisService.name);
-  private readonly redis: Redis;
+  private readonly redis: Redis | null;
 
   constructor() {
-    this.redis = new Redis({
-      url: process.env.UPSTASH_REDIS_REST_URL as string,
-      token: process.env.UPSTASH_REDIS_REST_TOKEN as string,
-    });
+    const url = process.env.UPSTASH_REDIS_REST_URL?.trim();
+    const token = process.env.UPSTASH_REDIS_REST_TOKEN?.trim();
+    if (url && token) {
+      this.redis = new Redis({ url, token });
+    } else {
+      this.redis = null;
+      this.logger.warn(
+        "Upstash Redis env vars missing — cache disabled until configured",
+      );
+    }
   }
 
   async get<T>(key: string): Promise<T | null> {
+    if (!this.redis) return null;
     try {
       const value = await this.redis.get<T>(key);
       return value ?? null;
@@ -24,6 +31,7 @@ export class RedisService {
   }
 
   async set(key: string, value: unknown, ttlSeconds = 3600): Promise<void> {
+    if (!this.redis) return;
     try {
       await this.redis.set(key, value, { ex: ttlSeconds });
     } catch (error) {
@@ -32,6 +40,7 @@ export class RedisService {
   }
 
   async del(key: string): Promise<void> {
+    if (!this.redis) return;
     try {
       await this.redis.del(key);
     } catch (error) {

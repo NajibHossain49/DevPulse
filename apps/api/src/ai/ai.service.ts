@@ -1,4 +1,8 @@
-import { Injectable, Logger } from "@nestjs/common";
+import {
+  Injectable,
+  Logger,
+  ServiceUnavailableException,
+} from "@nestjs/common";
 import Groq from "groq-sdk";
 import type { ProjectMetrics } from "../analytics/analytics.service";
 
@@ -42,10 +46,27 @@ export interface SprintInput {
 @Injectable()
 export class AiService {
   private readonly logger = new Logger(AiService.name);
-  private readonly groq: Groq;
+  private readonly groq: Groq | null;
 
   constructor() {
-    this.groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+    const apiKey = process.env.GROQ_API_KEY?.trim();
+    if (apiKey) {
+      this.groq = new Groq({ apiKey });
+    } else {
+      this.groq = null;
+      this.logger.warn(
+        "GROQ_API_KEY is not set — AI endpoints will return 503 until configured",
+      );
+    }
+  }
+
+  private client(): Groq {
+    if (!this.groq) {
+      throw new ServiceUnavailableException(
+        "AI is not configured. Set GROQ_API_KEY on the API host.",
+      );
+    }
+    return this.groq;
   }
 
   async analyzePullRequest(
@@ -64,7 +85,7 @@ export class AiService {
     const userPrompt = `Title: ${title}\n\nDescription: ${description ?? "N/A"}\n\nDiff:\n${truncatedDiff}`;
 
     try {
-      const completion = await this.groq.chat.completions.create({
+      const completion = await this.client().chat.completions.create({
         model: MODEL,
         temperature: 0.3,
         max_tokens: 500,
@@ -120,7 +141,7 @@ export class AiService {
     const userPrompt = `Engineer: ${userName}\n\nRecent commits:\n${commitLines}\n\nRecent pull requests:\n${prLines}`;
 
     try {
-      const completion = await this.groq.chat.completions.create({
+      const completion = await this.client().chat.completions.create({
         model: MODEL,
         temperature: 0.4,
         max_tokens: 300,
@@ -156,7 +177,7 @@ export class AiService {
     ].join("\n");
 
     try {
-      const completion = await this.groq.chat.completions.create({
+      const completion = await this.client().chat.completions.create({
         model: MODEL,
         temperature: 0.4,
         max_tokens: 400,
@@ -208,7 +229,7 @@ Return ONLY JSON:
 }`;
 
     try {
-      const completion = await this.groq.chat.completions.create({
+      const completion = await this.client().chat.completions.create({
         model: MODEL,
         temperature: 0.3,
         max_tokens: 300,
