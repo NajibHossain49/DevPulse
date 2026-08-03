@@ -1,0 +1,53 @@
+# Render Blueprint — DevPulse API
+# Dashboard: New → Blueprint → connect this repo → apply render.yaml
+# Docs: https://render.com/docs/blueprint-spec
+
+services:
+  - type: web
+    name: devpulse-api
+    runtime: node
+    plan: free
+    region: oregon
+    rootDir: .
+    # --prod=false so Nest CLI / tsc (devDependencies) are available at build time
+    buildCommand: corepack enable && pnpm install --frozen-lockfile --prod=false && pnpm --filter @devpulse/database build && pnpm --filter @devpulse/api build
+    startCommand: pnpm --filter @devpulse/api start:prod
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_VERSION
+        value: "20"
+      - key: NODE_ENV
+        value: production
+      - key: PNPM_CONFIG_PRODUCTION
+        value: "false"
+      - key: WEB_URL
+        value: https://dev-pulse-seven-livid.vercel.app
+      - key: CORS_ORIGINS
+        value: http://localhost:3000,https://dev-pulse-seven-livid.vercel.app
+      # Set these in the Render dashboard (Secrets)
+      - key: DATABASE_URL
+        sync: false
+      - key: DIRECT_URL
+        sync: false
+      - key: GITHUB_PAT
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
+      - key: UPSTASH_REDIS_REST_URL
+        sync: false
+      - key: UPSTASH_REDIS_REST_TOKEN
+        sync: false
+      - key: RESEND_API_KEY
+        sync: false
+      - key: WEBHOOK_SECRET
+        sync: false
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
+      - key: STRIPE_PRO_PRICE_ID
+        sync: false
+      - key: STRIPE_ENTERPRISE_PRICE_ID
+        sync: false
+      - key: REDIS_URL
+        sync: false

@@ -372,6 +372,17 @@ pnpm --filter @devpulse/api seed
 
 ---
 
+## Deploy
+
+| App | Host | Notes |
+|-----|------|--------|
+| **Web** | [Vercel](https://vercel.com) | `apps/web` · live: https://dev-pulse-seven-livid.vercel.app |
+| **API** | [Render](https://render.com) | Blueprint: root `render.yaml` · guide: [`apps/api/render.md`](apps/api/render.md) |
+| **DB** | Supabase | `DATABASE_URL` + `DIRECT_URL` |
+| **Redis** | Upstash | REST cache (+ optional TCP for BullMQ) |
+
+After the API is live, set Vercel `NEXT_PUBLIC_API_URL` to your Render URL (e.g. `https://devpulse-api.onrender.com`) and redeploy the web app.
+
 ## Roadmap ideas
 
 - Deeper CI/CD deployment tracking for DORA
