@@ -1,159 +1,380 @@
-# Turborepo starter
+# DevPulse
 
-This Turborepo starter is maintained by the Turborepo core team.
+**Engineering analytics for modern development teams.**
 
-## Using this example
+DevPulse turns GitHub and GitLab activity into actionable delivery insights — DORA metrics, PR health, AI-assisted reviews, team wellness, and billing-ready SaaS controls — in one dashboard.
 
-Run the following command:
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.7-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Next.js](https://img.shields.io/badge/Next.js-15-black?logo=next.js)](https://nextjs.org/)
+[![NestJS](https://img.shields.io/badge/NestJS-11-E0234E?logo=nestjs&logoColor=white)](https://nestjs.com/)
+[![Prisma](https://img.shields.io/badge/Prisma-6-2D3748?logo=prisma&logoColor=white)](https://www.prisma.io/)
+[![pnpm](https://img.shields.io/badge/pnpm-9-F69220?logo=pnpm&logoColor=white)](https://pnpm.io/)
 
-```sh
-npx create-turbo@latest
+---
+
+## Why DevPulse
+
+Engineering leaders need more than raw commit counts. DevPulse connects to your repositories, syncs pull requests and commits, and surfaces the signals that matter:
+
+- **Delivery health** — review time, merge rate, velocity, contributor activity
+- **DORA metrics** — deployment frequency, lead time, change failure rate, recovery
+- **AI assistance** — PR analysis, standup summaries, sprint insights (Groq)
+- **Team operations** — goals, wellness signals, leaderboards, audit logs
+- **SaaS-ready** — teams, roles, Stripe billing, usage limits, Slack alerts
+
+---
+
+## Features
+
+| Area | Capabilities |
+|------|----------------|
+| **Source control** | GitHub & GitLab sync, webhooks, optional GitHub App |
+| **Analytics** | Metrics, contributors, velocity, review time, timelines, DORA |
+| **AI** | PR quality analysis, standup generation, batch insights |
+| **Collaboration** | Teams, RBAC (`owner` / `admin` / `member` / `viewer`), PR comments |
+| **Operations** | Goals, wellness, anomaly alerts, scheduled reports (Resend) |
+| **Realtime** | Socket.IO activity feed |
+| **Billing** | Stripe Checkout + Customer Portal (Free / Pro / Enterprise) |
+| **Ecosystem** | CLI, VS Code extension, browser extension (GitHub PRs) |
+| **PWA** | Installable dashboard with offline fallback |
+
+---
+
+## Architecture
+
+### System overview
+
+```mermaid
+flowchart TB
+  subgraph Clients["Clients"]
+    Web["Web App<br/>Next.js 15"]
+    CLI["CLI"]
+    VSCode["VS Code Extension"]
+    Browser["Browser Extension"]
+  end
+
+  subgraph Platform["DevPulse Platform"]
+    Auth["Better Auth<br/>Sessions · OAuth"]
+    API["NestJS API<br/>REST · WebSocket · Swagger"]
+    Queue["BullMQ Workers"]
+    Cache["Upstash Redis"]
+    DB[(PostgreSQL<br/>Prisma)]
+  end
+
+  subgraph External["Integrations"]
+    GH["GitHub / GitLab"]
+    AI["Groq AI"]
+    Stripe["Stripe"]
+    Slack["Slack"]
+    Email["Resend"]
+  end
+
+  Web --> Auth
+  Web --> API
+  CLI --> API
+  VSCode --> API
+  Browser --> API
+
+  Auth --> DB
+  API --> DB
+  API --> Cache
+  API --> Queue
+  API --> GH
+  API --> AI
+  API --> Stripe
+  API --> Slack
+  API --> Email
+  Queue --> DB
+  Queue --> AI
 ```
 
-## What's inside?
+### Frontend architecture
 
-This Turborepo includes the following packages/apps:
+```mermaid
+flowchart LR
+  subgraph NextApp["apps/web — Next.js App Router"]
+    Landing["Landing / Marketing"]
+    AuthPages["Login · Signup"]
+    MW["Middleware<br/>session gate"]
+    Dash["Dashboard Shell"]
 
-### Apps and Packages
+    subgraph Views["Dashboard views"]
+      Overview["Overview"]
+      Projects["Projects · PRs · Analytics"]
+      Teams["Teams · Wellness · Goals"]
+      Reports["Reports · Leaderboard"]
+      Settings["Settings · Billing · Integrations"]
+      Admin["Audit"]
+    end
 
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
+    UI["UI Kit<br/>shadcn · Tailwind v4 · Recharts"]
+    AuthAPI["/api/auth/*<br/>Better Auth"]
+    Client["API client · Socket.IO"]
+  end
 
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
-
-### Utilities
-
-This Turborepo has some additional tools already setup for you:
-
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
-
-### Build
-
-To build all apps and packages, run the following command:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
-
-```sh
-cd my-turborepo
-turbo build
+  Landing --> AuthPages
+  AuthPages --> AuthAPI
+  AuthPages --> MW
+  MW --> Dash
+  Dash --> Views
+  Views --> UI
+  Views --> Client
+  Client -->|"REST + WS"| NestAPI["apps/api"]
 ```
 
-Without global `turbo`, use your package manager:
+**Frontend stack highlights**
 
-```sh
-cd my-turborepo
-npx turbo build
-pnpm dlx turbo build
-pnpm exec turbo build
+- Next.js 15 (App Router) + React 19 + TypeScript
+- Better Auth (email/password + GitHub OAuth)
+- Tailwind CSS v4, shadcn/ui, Lucide icons, Recharts
+- Socket.IO client for live activity
+- PWA support via `@ducanh2912/next-pwa`
+
+### Backend architecture
+
+```mermaid
+flowchart TB
+  subgraph NestAPI["apps/api — NestJS"]
+    HTTP["HTTP layer<br/>Guards · Validation · Throttling"]
+    Swagger["Swagger /api/docs"]
+    WS["Socket.IO Gateway"]
+
+    subgraph Domains["Domain modules"]
+      TeamsMod["Teams · Permissions · Usage"]
+      ProjMod["Projects · GitHub · GitLab"]
+      AnalyticsMod["Analytics · DORA · Benchmarks"]
+      AiMod["AI · Comments"]
+      OpsMod["Goals · Wellness · Alerts · Reports"]
+      GameMod["Gamification · Audit"]
+      BillMod["Billing · Slack · Integrations"]
+    end
+
+    QueueMod["Queue module<br/>BullMQ"]
+  end
+
+  DB[(PostgreSQL)]
+  Redis[(Redis / Upstash)]
+  Providers["Git providers · Groq · Stripe · Slack · Resend"]
+
+  HTTP --> Domains
+  WS --> Domains
+  Domains --> DB
+  Domains --> Redis
+  Domains --> Providers
+  Domains --> QueueMod
+  QueueMod --> Redis
+  QueueMod --> Providers
+  Swagger -.-> HTTP
 ```
 
-You can build a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
+**Backend stack highlights**
 
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
+- NestJS 11, Swagger, class-validator, rate limiting
+- Prisma 6 + PostgreSQL (shared `@devpulse/database` package)
+- Octokit / GitBeaker for source sync
+- Groq for AI workloads
+- Stripe, Slack Bolt, Resend
+- BullMQ for background jobs; Upstash Redis for cache
 
-```sh
-turbo build --filter=docs
+### Data model (core)
+
+```mermaid
+erDiagram
+  User ||--o{ TeamMember : joins
+  Team ||--o{ TeamMember : has
+  Team ||--o| Subscription : bills
+  Team ||--o{ Project : owns
+  Project ||--o{ PullRequest : tracks
+  Project ||--o{ Commit : tracks
+  Project ||--o{ AnalyticsSnapshot : aggregates
+  Team ||--o{ Goal : sets
+  User ||--o{ Achievement : earns
+  Team ||--o{ LeaderboardEntry : ranks
+  User ||--o{ AuditLog : records
 ```
 
-Without global `turbo`:
+---
 
-```sh
-npx turbo build --filter=docs
-pnpm exec turbo build --filter=docs
-pnpm exec turbo build --filter=docs
+## Monorepo structure
+
+```text
+devpulse/
+├── apps/
+│   ├── web/                 # Next.js dashboard + landing
+│   └── api/                 # NestJS API + seed scripts
+├── packages/
+│   ├── database/            # Prisma schema & client
+│   ├── cli/                 # `devpulse` CLI
+│   ├── vscode/              # VS Code extension
+│   └── browser-ext/         # Chrome MV3 extension
+├── docs/                    # Feature & cost notes
+└── package.json             # Turborepo + pnpm workspace
 ```
 
-### Develop
+---
 
-To develop all apps and packages, run the following command:
+## Tech stack
 
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
+| Layer | Technology |
+|-------|------------|
+| Monorepo | Turborepo, pnpm workspaces |
+| Frontend | Next.js 15, React 19, Tailwind CSS 4, shadcn/ui |
+| Auth | Better Auth (credentials + GitHub OAuth) |
+| Backend | NestJS 11, Socket.IO, BullMQ |
+| Database | PostgreSQL, Prisma 6 |
+| Cache / jobs | Upstash Redis, BullMQ |
+| AI | Groq |
+| Payments | Stripe |
+| Notifications | Slack, Resend |
+| Tooling | TypeScript, ESLint, Turbo |
 
-```sh
-cd my-turborepo
-turbo dev
+---
+
+## Getting started
+
+### Prerequisites
+
+- Node.js 20+
+- pnpm 9+
+- PostgreSQL database
+- GitHub PAT (for sync / seed)
+- Optional: Redis, Groq, Stripe, Slack, Resend keys for full features
+
+### Install
+
+```bash
+pnpm install
 ```
 
-Without global `turbo`, use your package manager:
+### Environment
 
-```sh
-cd my-turborepo
-npx turbo dev
-pnpm exec turbo dev
-pnpm exec turbo dev
+Create env files from your deployment secrets (no committed `.env` files):
+
+**`apps/web/.env.local`**
+
+```env
+DATABASE_URL=
+BETTER_AUTH_SECRET=
+BETTER_AUTH_URL=http://localhost:3000
+NEXT_PUBLIC_API_URL=http://localhost:3001
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+GITHUB_CLIENT_ID=
+GITHUB_CLIENT_SECRET=
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=
 ```
 
-You can develop a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
+**`apps/api/.env`**
 
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
-
-```sh
-turbo dev --filter=web
+```env
+PORT=3001
+WEB_URL=http://localhost:3000
+DATABASE_URL=
+DIRECT_URL=
+GITHUB_PAT=
+GROQ_API_KEY=
+UPSTASH_REDIS_REST_URL=
+UPSTASH_REDIS_REST_TOKEN=
+REDIS_URL=
+STRIPE_SECRET_KEY=
+STRIPE_WEBHOOK_SECRET=
+STRIPE_PRO_PRICE_ID=
+STRIPE_ENTERPRISE_PRICE_ID=
+RESEND_API_KEY=
+# Optional: GitHub App, Slack, GitLab
 ```
 
-Without global `turbo`:
+### Database
 
-```sh
-npx turbo dev --filter=web
-pnpm exec turbo dev --filter=web
-pnpm exec turbo dev --filter=web
+```bash
+pnpm db:generate
+pnpm db:push
 ```
 
-### Remote Caching
+### Run locally
 
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
+```bash
+# API — http://localhost:3001  ·  Swagger /api/docs
+pnpm --filter @devpulse/api start:dev
 
-Turborepo can use a technique known as [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
-
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
-
-```sh
-cd my-turborepo
-turbo login
+# Web — http://localhost:3000
+pnpm --filter @devpulse/web dev
 ```
 
-Without global `turbo`, use your package manager:
+Or from the root:
 
-```sh
-cd my-turborepo
-npx turbo login
-pnpm exec turbo login
-pnpm exec turbo login
+```bash
+pnpm dev
 ```
 
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
+### Seed demo data (optional)
 
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
+Syncs real public GitHub repositories into a demo team (requires `GITHUB_PAT`):
 
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
-
-```sh
-turbo link
+```bash
+pnpm --filter @devpulse/api seed
 ```
 
-Without global `turbo`:
+---
 
-```sh
-npx turbo link
-pnpm exec turbo link
-pnpm exec turbo link
-```
+## API surface
 
-## Useful Links
+| Concern | Notes |
+|---------|--------|
+| Base URL | `http://localhost:3001` |
+| Docs | Swagger UI at `/api/docs` |
+| Auth | Session cookie or `Authorization: Bearer <token>` |
+| Realtime | Socket.IO namespace `/events` |
+| Webhooks | `POST /github/webhook`, Stripe + Slack event routes |
 
-Learn more about the power of Turborepo:
+---
 
-- [Tasks](https://turborepo.dev/docs/crafting-your-repository/running-tasks)
-- [Caching](https://turborepo.dev/docs/crafting-your-repository/caching)
-- [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching)
-- [Filtering](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters)
-- [Configuration Options](https://turborepo.dev/docs/reference/configuration)
-- [CLI Usage](https://turborepo.dev/docs/reference/command-line-reference)
+## Roles & access
+
+| Role | Intent |
+|------|--------|
+| **Owner** | Full team control, billing, destructive actions |
+| **Admin** | Manage members, projects, integrations |
+| **Member** | Day-to-day project & analytics access |
+| **Viewer** | Read-only dashboards |
+
+---
+
+## Scripts
+
+| Command | Description |
+|---------|-------------|
+| `pnpm install` | Install workspace dependencies |
+| `pnpm dev` | Run apps via Turbo |
+| `pnpm build` | Production build |
+| `pnpm lint` / `pnpm typecheck` | Quality checks |
+| `pnpm db:generate` / `pnpm db:push` | Prisma generate & schema push |
+| `pnpm --filter @devpulse/api seed` | Seed real GitHub demo data |
+| `pnpm cli:build` | Build the DevPulse CLI |
+
+---
+
+## Design principles
+
+- **Real data first** — analytics are derived from synced repository activity, not fake metrics
+- **Graceful degradation** — integrations are env-gated; core product runs without every key
+- **Clear boundaries** — web owns auth UX; API owns domain logic, sync, and billing webhooks
+- **Shared types via Prisma** — one schema package consumed by web and API
+
+---
+
+## Roadmap ideas
+
+- Deeper CI/CD deployment tracking for DORA
+- Full background AI / report worker coverage
+- Enterprise SSO and advanced org controls
+- Mobile-optimized PWA push notifications
+
+---
+
+## License
+
+Private / unlicensed unless otherwise stated by the repository owner.
+
+---
+
+Built as a full-stack SaaS portfolio product — TypeScript monorepo, production-shaped auth, billing, analytics, and AI integrations.
