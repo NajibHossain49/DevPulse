@@ -7,8 +7,8 @@
   "scripts": {
     "build": "tsc",
     "db:generate": "prisma generate",
-    "db:push": "prisma db push",
-    "db:studio": "prisma studio",
+    "db:push": "bash ../scripts/with-api-env.sh prisma db push",
+    "db:studio": "bash ../scripts/with-api-env.sh prisma studio",
     "clean": "rm -rf dist"
   },
   "dependencies": {
