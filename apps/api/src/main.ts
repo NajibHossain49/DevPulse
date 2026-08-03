@@ -5,13 +5,14 @@ import { IoAdapter } from "@nestjs/platform-socket.io";
 import { AppModule } from "./app.module";
 import { AllExceptionsFilter } from "./common/filters/all-exceptions.filter";
 import { TransformInterceptor } from "./common/interceptors/transform.interceptor";
+import { getCorsOrigins } from "./common/web-url";
 
 async function bootstrap() {
   // rawBody is required so the Stripe webhook can verify the request signature.
   const app = await NestFactory.create(AppModule, { rawBody: true });
 
   app.enableCors({
-    origin: process.env.WEB_URL || "http://localhost:3000",
+    origin: getCorsOrigins(),
     credentials: true,
   });
 

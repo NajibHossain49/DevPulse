@@ -250,7 +250,7 @@ pnpm install
 
 Create env files from your deployment secrets (no committed `.env` files):
 
-**`apps/web/.env.local`**
+**`apps/web/.env.local`** (local)
 
 ```env
 DATABASE_URL=
@@ -263,11 +263,21 @@ GITHUB_CLIENT_SECRET=
 NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=
 ```
 
+**Production web (Vercel)** — also mirrored in `apps/web/.env.production`:
+
+| Variable | Value |
+|----------|--------|
+| `NEXT_PUBLIC_APP_URL` | `https://dev-pulse-seven-livid.vercel.app` |
+| `BETTER_AUTH_URL` | `https://dev-pulse-seven-livid.vercel.app` |
+| `NEXT_PUBLIC_API_URL` | your deployed API URL |
+| `DATABASE_URL` / `BETTER_AUTH_SECRET` / GitHub OAuth | set in Vercel → Settings → Environment Variables |
+
 **`apps/api/.env`**
 
 ```env
 PORT=3001
-WEB_URL=http://localhost:3000
+WEB_URL=https://dev-pulse-seven-livid.vercel.app
+CORS_ORIGINS=http://localhost:3000,https://dev-pulse-seven-livid.vercel.app
 DATABASE_URL=
 DIRECT_URL=
 GITHUB_PAT=

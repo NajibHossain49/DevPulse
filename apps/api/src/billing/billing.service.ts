@@ -2,6 +2,7 @@ import { Injectable, BadRequestException } from "@nestjs/common";
 import Stripe from "stripe";
 import { PrismaService } from "../prisma/prisma.service";
 import { PlanType } from "./plan.config";
+import { getWebUrl } from "../common/web-url";
 
 @Injectable()
 export class BillingService {
@@ -52,7 +53,7 @@ export class BillingService {
       customerEmail,
       customerName,
     );
-    const webUrl = process.env.WEB_URL || "http://localhost:3000";
+    const webUrl = getWebUrl();
     const session = await this.stripe.checkout.sessions.create({
       customer: customerId,
       mode: "subscription",
@@ -72,7 +73,7 @@ export class BillingService {
     if (!sub?.stripeCustomerId) {
       throw new BadRequestException("No subscription found");
     }
-    const webUrl = process.env.WEB_URL || "http://localhost:3000";
+    const webUrl = getWebUrl();
     const session = await this.stripe.billingPortal.sessions.create({
       customer: sub.stripeCustomerId,
       return_url: `${webUrl}/dashboard/settings/billing`,

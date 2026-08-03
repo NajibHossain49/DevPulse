@@ -3,6 +3,7 @@ import { PrismaService } from "../prisma/prisma.service";
 import { AnalyticsService, ProjectMetrics } from "../analytics/analytics.service";
 import * as cron from "node-cron";
 import { Resend } from "resend";
+import { getWebUrl } from "../common/web-url";
 
 interface ReportEmailData {
   type: "weekly" | "monthly";
@@ -114,7 +115,7 @@ export class ReportsService implements OnModuleInit {
             <p><strong>Commits:</strong> ${m.commitsCount}</p>
           </div>
           <p>
-            <a href="${process.env.WEB_URL}/dashboard" style="background: #3b82f6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">View Dashboard</a>
+            <a href="${getWebUrl()}/dashboard" style="background: #3b82f6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">View Dashboard</a>
           </p>
         </body>
       </html>

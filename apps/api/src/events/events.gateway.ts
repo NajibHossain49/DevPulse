@@ -8,10 +8,11 @@ import {
 import { Server, Socket } from "socket.io";
 import { Logger } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
+import { getCorsOrigins } from "../common/web-url";
 
 @WebSocketGateway({
   cors: {
-    origin: process.env.WEB_URL || "http://localhost:3000",
+    origin: getCorsOrigins(),
     credentials: true,
   },
   namespace: "/events",
