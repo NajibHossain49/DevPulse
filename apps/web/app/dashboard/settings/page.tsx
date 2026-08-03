@@ -166,7 +166,7 @@ export default function SettingsPage() {
             <Badge variant="secondary">v1.0.0</Badge>
           </div>
           <p className="text-sm text-muted-foreground">
-            Built with Next.js 15 + NestJS + AI
+            Engineering analytics for modern development teams
           </p>
         </CardContent>
       </Card>

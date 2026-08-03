@@ -1,7 +1,7 @@
 /**
- * DevPulse seed — demo users + ONE real GitHub repository synced via API.
+ * DevPulse seed — demo users + real GitHub repositories synced via API.
  *
- * Real repo: colinhacks/zod (public, authentic PR/commit history)
+ * Repos: zod, zustand, query, drizzle-orm, ui, create-t3-app
  *
  * Login (all users):
  *   email: <local>@devpulse.demo
@@ -51,20 +51,59 @@ const prisma = new PrismaClient();
 const DEMO_DOMAIN = "devpulse.demo";
 const DEMO_PASSWORD = "DevPulse123!";
 
-/** Authentic public repo used for product demo data */
-const REAL_REPO = {
-  owner: "colinhacks",
-  name: "zod",
-  fullName: "colinhacks/zod",
-  displayName: "zod",
-} as const;
+type RealRepo = {
+  owner: string;
+  name: string;
+  fullName: string;
+  displayName: string;
+};
 
-const PR_PAGES = 3; // up to 300 real PRs (list endpoint only — fast)
-const COMMIT_PAGES = 5; // up to 500 real commits (90-day window)
+/** Authentic public repos used for product demo data */
+const REAL_REPOS: RealRepo[] = [
+  {
+    owner: "colinhacks",
+    name: "zod",
+    fullName: "colinhacks/zod",
+    displayName: "zod",
+  },
+  {
+    owner: "pmndrs",
+    name: "zustand",
+    fullName: "pmndrs/zustand",
+    displayName: "zustand",
+  },
+  {
+    owner: "TanStack",
+    name: "query",
+    fullName: "TanStack/query",
+    displayName: "TanStack Query",
+  },
+  {
+    owner: "drizzle-team",
+    name: "drizzle-orm",
+    fullName: "drizzle-team/drizzle-orm",
+    displayName: "Drizzle ORM",
+  },
+  {
+    owner: "shadcn-ui",
+    name: "ui",
+    fullName: "shadcn-ui/ui",
+    displayName: "shadcn/ui",
+  },
+  {
+    owner: "t3-oss",
+    name: "create-t3-app",
+    fullName: "t3-oss/create-t3-app",
+    displayName: "create-t3-app",
+  },
+];
+
+const PR_PAGES = 2; // up to 200 real PRs per repo (list endpoint only)
+const COMMIT_PAGES = 3; // up to 300 real commits per repo
 const PER_PAGE = 100;
 const COMMIT_WINDOW_DAYS = 365;
 /** Sample of recent PRs to enrich with additions/deletions/reviews */
-const DETAIL_SAMPLE = 40;
+const DETAIL_SAMPLE = 20;
 
 async function hashPassword(password: string): Promise<string> {
   const salt = randomBytes(16).toString("hex");
@@ -198,13 +237,17 @@ async function wipeDemoData() {
   await prisma.user.deleteMany({ where: { id: { in: userIds } } });
 }
 
-async function syncRealRepo(projectId: string, octokit: Octokit) {
-  const { owner, name } = REAL_REPO;
+async function syncRealRepo(
+  projectId: string,
+  repo: RealRepo,
+  octokit: Octokit,
+) {
+  const { owner, name, fullName } = repo;
   let prsSynced = 0;
   let commitsSynced = 0;
   const errors: string[] = [];
 
-  console.log(`→ Syncing pull requests from ${REAL_REPO.fullName}...`);
+  console.log(`→ Syncing pull requests from ${fullName}...`);
   type ListedPr = Awaited<
     ReturnType<typeof octokit.pulls.list>
   >["data"][number];
@@ -313,7 +356,7 @@ async function syncRealRepo(projectId: string, octokit: Octokit) {
   }
   console.log(`   ✓ enriched ${enriched} PRs`);
 
-  console.log(`→ Syncing commits from ${REAL_REPO.fullName} (last ${COMMIT_WINDOW_DAYS}d)...`);
+  console.log(`→ Syncing commits from ${fullName} (last ${COMMIT_WINDOW_DAYS}d)...`);
   const since = new Date(
     Date.now() - COMMIT_WINDOW_DAYS * 24 * 60 * 60 * 1000,
   ).toISOString();
@@ -441,12 +484,11 @@ async function seed() {
 
   const octokit = new Octokit({ auth: process.env.GITHUB_PAT });
 
-  console.log(`→ Validating real repo ${REAL_REPO.fullName}...`);
-  await octokit.repos.get({
-    owner: REAL_REPO.owner,
-    repo: REAL_REPO.name,
-  });
-  console.log("   ✓ repo accessible");
+  console.log(`→ Validating ${REAL_REPOS.length} real repos...`);
+  for (const repo of REAL_REPOS) {
+    await octokit.repos.get({ owner: repo.owner, repo: repo.name });
+    console.log(`   ✓ ${repo.fullName}`);
+  }
 
   console.log("→ Wiping previous @devpulse.demo seed data...");
   await wipeDemoData();
@@ -501,42 +543,65 @@ async function seed() {
 
   const period = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, "0")}`;
 
-  console.log(`→ Creating project for real repo ${REAL_REPO.fullName}...`);
-  const project = await prisma.project.create({
-    data: {
-      name: REAL_REPO.displayName,
-      githubRepo: REAL_REPO.fullName,
-      provider: "github",
-      teamId: team.id,
-      autoReview: true,
-    },
-  });
+  type ProjectSync = {
+    projectId: string;
+    repo: RealRepo;
+    prsSynced: number;
+    commitsSynced: number;
+  };
+  const syncedProjects: ProjectSync[] = [];
 
-  const sync = await syncRealRepo(project.id, octokit);
-  console.log(
-    `   ✓ synced ${sync.prsSynced} PRs, ${sync.commitsSynced} commits` +
-      (sync.errors.length ? ` (${sync.errors.length} warnings)` : ""),
-  );
-  if (sync.errors.length) {
-    console.log("   first warnings:", sync.errors.slice(0, 5));
+  for (const repo of REAL_REPOS) {
+    console.log(`\n→ Creating project for ${repo.fullName}...`);
+    const project = await prisma.project.create({
+      data: {
+        name: repo.displayName,
+        githubRepo: repo.fullName,
+        provider: "github",
+        teamId: team.id,
+        autoReview: true,
+      },
+    });
+
+    const sync = await syncRealRepo(project.id, repo, octokit);
+    console.log(
+      `   ✓ synced ${sync.prsSynced} PRs, ${sync.commitsSynced} commits` +
+        (sync.errors.length ? ` (${sync.errors.length} warnings)` : ""),
+    );
+    if (sync.errors.length) {
+      console.log("   first warnings:", sync.errors.slice(0, 3));
+    }
+
+    console.log(`→ Building analytics for ${repo.displayName}...`);
+    await buildAnalyticsFromRealData(project.id);
+
+    syncedProjects.push({
+      projectId: project.id,
+      repo,
+      prsSynced: sync.prsSynced,
+      commitsSynced: sync.commitsSynced,
+    });
   }
 
-  console.log("→ Building analytics snapshots from real activity...");
-  await buildAnalyticsFromRealData(project.id);
-
+  const projectIds = syncedProjects.map((p) => p.projectId);
   const prCount = await prisma.pullRequest.count({
-    where: { projectId: project.id },
+    where: { projectId: { in: projectIds } },
   });
   const commitCount = await prisma.commit.count({
-    where: { projectId: project.id },
+    where: { projectId: { in: projectIds } },
   });
   const mergedCount = await prisma.pullRequest.count({
-    where: { projectId: project.id, state: "merged" },
+    where: { projectId: { in: projectIds }, state: "merged" },
   });
 
   await prisma.usageRecord.createMany({
     data: [
-      { teamId: team.id, type: "project", count: 1, period },
+      {
+        teamId: team.id,
+        type: "project",
+        count: syncedProjects.length,
+        period,
+      },
       {
         teamId: team.id,
         type: "team_member",
@@ -544,13 +609,18 @@ async function seed() {
         period,
       },
       { teamId: team.id, type: "ai_analysis", count: 0, period },
-      { teamId: team.id, type: "sync", count: 1, period },
+      {
+        teamId: team.id,
+        type: "sync",
+        count: syncedProjects.length,
+        period,
+      },
     ],
   });
 
   // SaaS demo extras (goals / audit) — not inventing git history
   const avgReview = await prisma.pullRequest.aggregate({
-    where: { projectId: project.id, reviewTime: { not: null } },
+    where: { projectId: { in: projectIds }, reviewTime: { not: null } },
     _avg: { reviewTime: true },
   });
 
@@ -559,7 +629,7 @@ async function seed() {
       {
         teamId: team.id,
         title: "Keep average review time under 24h",
-        description: `Tracked against live ${REAL_REPO.fullName} sync data.`,
+        description: "Tracked against live synced repository activity.",
         metric: "review_time",
         target: 1440,
         current: Math.round(avgReview._avg.reviewTime ?? 0),
@@ -574,7 +644,7 @@ async function seed() {
         target: Math.max(mergedCount, 10),
         current: mergedCount,
         deadline: daysAgo(-10, 18),
-        status: mergedCount > 0 ? "active" : "active",
+        status: "active",
       },
     ],
   });
@@ -591,29 +661,29 @@ async function seed() {
         userAgent: "DevPulse Seed",
         createdAt: daysAgo(2, 11),
       },
-      {
+      ...syncedProjects.map((p, i) => ({
         userId: owner.id,
         action: "create_project",
         resource: "project",
-        resourceId: project.id,
-        metadata: { repo: REAL_REPO.fullName, source: "github-api" },
+        resourceId: p.projectId,
+        metadata: { repo: p.repo.fullName, source: "github-api" },
         ipAddress: "203.0.113.10",
         userAgent: "DevPulse Seed",
-        createdAt: daysAgo(1, 14),
-      },
-      {
+        createdAt: daysAgo(1, 14 - i),
+      })),
+      ...syncedProjects.map((p) => ({
         userId: owner.id,
         action: "sync_project",
         resource: "project",
-        resourceId: project.id,
+        resourceId: p.projectId,
         metadata: {
-          prsSynced: sync.prsSynced,
-          commitsSynced: sync.commitsSynced,
+          prsSynced: p.prsSynced,
+          commitsSynced: p.commitsSynced,
         },
         ipAddress: "203.0.113.10",
         userAgent: "DevPulse Seed",
         createdAt: new Date(),
-      },
+      })),
     ],
   });
 
@@ -636,8 +706,13 @@ async function seed() {
   }
 
   console.log("\n✅ Real-data seed complete\n");
-  console.log(`Repository : https://github.com/${REAL_REPO.fullName}`);
-  console.log(`PRs stored : ${prCount}`);
+  console.log(`Projects   : ${syncedProjects.length}`);
+  for (const p of syncedProjects) {
+    console.log(
+      `  - ${p.repo.fullName}  (${p.prsSynced} PRs, ${p.commitsSynced} commits)`,
+    );
+  }
+  console.log(`PRs total  : ${prCount}`);
   console.log(`Commits    : ${commitCount}`);
   console.log(`Merged PRs : ${mergedCount}`);
   console.log("\nDemo logins (password: DevPulse123!)\n");
