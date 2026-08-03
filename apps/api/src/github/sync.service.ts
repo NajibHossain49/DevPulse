@@ -127,8 +127,8 @@ export class SyncService {
     };
 
     await this.prisma.pullRequest.upsert({
-      where: { githubId: pr.id },
-      create: { githubId: pr.id, ...data },
+      where: { githubId: BigInt(pr.id) },
+      create: { githubId: BigInt(pr.id), ...data },
       update: data,
     });
   }

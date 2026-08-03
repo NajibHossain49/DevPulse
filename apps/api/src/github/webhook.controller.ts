@@ -132,8 +132,8 @@ export class WebhookController {
 
     // Upsert first so the auto-review DB update below can find the row.
     await this.prisma.pullRequest.upsert({
-      where: { githubId: pr.id },
-      create: { githubId: pr.id, ...data },
+      where: { githubId: BigInt(pr.id) },
+      create: { githubId: BigInt(pr.id), ...data },
       update: data,
     });
 
@@ -149,7 +149,7 @@ export class WebhookController {
     if (!pr || !review) return;
 
     const existing = await this.prisma.pullRequest.findUnique({
-      where: { githubId: pr.id },
+      where: { githubId: BigInt(pr.id) },
     });
     if (!existing || existing.firstReviewAt) return;
 
@@ -161,7 +161,7 @@ export class WebhookController {
     );
 
     await this.prisma.pullRequest.update({
-      where: { githubId: pr.id },
+      where: { githubId: BigInt(pr.id) },
       data: { firstReviewAt: submittedAt, reviewTime },
     });
   }

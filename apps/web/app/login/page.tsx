@@ -8,7 +8,7 @@ export default function LoginPage() {
   return (
     <AuthShell
       title="Welcome back"
-      description="Sign in with email and password, or continue with GitHub to open your workspace."
+      description="Sign in with email and password, pick a demo role for a quick tour, or continue with GitHub."
       footer={
         <>
           New to DevPulse?{" "}
@@ -21,7 +21,7 @@ export default function LoginPage() {
         </>
       }
     >
-      <AuthForm defaultMode="signin" />
+      <AuthForm defaultMode="signin" showDemoPicker />
     </AuthShell>
   );
 }

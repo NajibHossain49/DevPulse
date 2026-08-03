@@ -9,16 +9,21 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { DemoAccountPicker } from "@/components/auth/demo-account-picker";
+import type { DemoAccount } from "@/lib/demo-accounts";
 
 type Mode = "signin" | "signup";
 
 export default function AuthForm({
   defaultMode = "signin",
   showModeSwitch = false,
+  showDemoPicker = false,
 }: {
   defaultMode?: Mode;
   /** When false (default on dedicated pages), only the selected mode is shown. */
   showModeSwitch?: boolean;
+  /** Recruiter-friendly demo role dropdown (login only). */
+  showDemoPicker?: boolean;
 }) {
   const router = useRouter();
   const [mode, setMode] = useState<Mode>(defaultMode);
@@ -26,8 +31,19 @@ export default function AuthForm({
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [demoId, setDemoId] = useState<string | null>(null);
   const [loading, setLoading] = useState<"email" | "github" | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  function applyDemoAccount(account: DemoAccount) {
+    setDemoId(account.id);
+    setEmail(account.email);
+    setPassword(account.password);
+    setError(null);
+    toast.message(`Filled ${account.role} demo`, {
+      description: account.email,
+    });
+  }
 
   const resetError = () => setError(null);
 
@@ -129,6 +145,9 @@ export default function AuthForm({
 
   const signinForm = (
     <form onSubmit={handleEmailAuth} className="space-y-3">
+      {showDemoPicker && (
+        <DemoAccountPicker value={demoId} onSelect={applyDemoAccount} />
+      )}
       <div className="space-y-2">
         <Label htmlFor="signin-email">Email</Label>
         <div className="relative">

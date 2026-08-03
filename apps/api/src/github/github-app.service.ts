@@ -49,7 +49,7 @@ export class GithubAppService {
       await this.postReviewComment(repo, prNumber, analysis, installationId);
 
       await this.prisma.pullRequest.updateMany({
-        where: { githubId: pullRequest.id },
+        where: { githubId: BigInt(pullRequest.id) },
         data: {
           aiSummary: analysis.summary,
           aiQualityScore: analysis.score,
