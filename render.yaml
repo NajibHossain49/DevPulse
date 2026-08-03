@@ -9,8 +9,9 @@ services:
     plan: free
     region: oregon
     rootDir: .
-    # --prod=false so Nest CLI / tsc (devDependencies) are available at build time
-    buildCommand: corepack enable && pnpm install --frozen-lockfile --prod=false && pnpm --filter @devpulse/database build && pnpm --filter @devpulse/api build
+    # Avoid `corepack enable` on Render (EROFS on /usr/bin/pnpm).
+    # Install pnpm via npm, then build workspace packages.
+    buildCommand: npm install -g pnpm@9.0.0 && pnpm install --frozen-lockfile --prod=false && pnpm --filter @devpulse/database build && pnpm --filter @devpulse/api build
     startCommand: pnpm --filter @devpulse/api start:prod
     healthCheckPath: /health
     envVars:

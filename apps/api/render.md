@@ -20,7 +20,7 @@ Public URL after deploy (default service name):
 | Region | Oregon (or closest) |
 | Branch | `main` |
 | Root Directory | *(leave empty — repo root)* |
-| Build Command | `corepack enable && pnpm install --frozen-lockfile --prod=false && pnpm --filter @devpulse/database build && pnpm --filter @devpulse/api build` |
+| Build Command | `npm install -g pnpm@9.0.0 && pnpm install --frozen-lockfile --prod=false && pnpm --filter @devpulse/database build && pnpm --filter @devpulse/api build` |
 | Start Command | `pnpm --filter @devpulse/api start:prod` |
 | Health Check Path | `/health` |
 
