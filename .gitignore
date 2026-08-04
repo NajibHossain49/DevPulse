@@ -16,11 +16,11 @@ apps/web/public/swe-worker-*.js
 apps/web/public/swe-worker-*.js.map
 apps/web/public/fallback-*.js
 
-# Environment
+# Environment (never commit secrets — use Vercel/Render dashboards)
 .env
-.env.local
-.env.*.local
-.env.production
+.env.*
+!.env.example
+!**/.env.example
 
 # IDE
 .vscode/
