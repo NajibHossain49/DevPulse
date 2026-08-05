@@ -2,7 +2,7 @@
 
 **Engineering analytics for modern development teams.**
 
-DevPulse turns GitHub and GitLab activity into actionable delivery insights — DORA metrics, PR health, AI-assisted reviews, team wellness, and billing-ready SaaS controls — in one dashboard.
+DevPulse turns GitHub activity into actionable delivery insights — DORA metrics, PR health, AI-assisted reviews, team wellness, and billing-ready SaaS controls — in one dashboard.
 
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Next.js](https://img.shields.io/badge/Next.js-15-black?logo=next.js)](https://nextjs.org/)
@@ -20,7 +20,7 @@ Engineering leaders need more than raw commit counts. DevPulse connects to your 
 - **DORA metrics** — deployment frequency, lead time, change failure rate, recovery
 - **AI assistance** — PR analysis, standup summaries, sprint insights (Groq)
 - **Team operations** — goals, wellness signals, leaderboards, audit logs
-- **SaaS-ready** — teams, roles, Stripe billing, usage limits, Slack alerts
+- **SaaS-ready** — teams, roles, Stripe billing, usage limits, Telegram alerts
 
 ---
 
@@ -28,7 +28,7 @@ Engineering leaders need more than raw commit counts. DevPulse connects to your 
 
 | Area | Capabilities |
 |------|----------------|
-| **Source control** | GitHub & GitLab sync, webhooks, optional GitHub App |
+| **Source control** | GitHub sync, webhooks, optional GitHub App |
 | **Analytics** | Metrics, contributors, velocity, review time, timelines, DORA |
 | **AI** | PR quality analysis, standup generation, batch insights |
 | **Collaboration** | Teams, RBAC (`owner` / `admin` / `member` / `viewer`), PR comments |
@@ -62,10 +62,10 @@ flowchart TB
   end
 
   subgraph External["Integrations"]
-    GH["GitHub / GitLab"]
+    GH["GitHub"]
     AI["Groq AI"]
     Stripe["Stripe"]
-    Slack["Slack"]
+    Telegram["Telegram"]
     Email["Resend"]
   end
 
@@ -82,7 +82,7 @@ flowchart TB
   API --> GH
   API --> AI
   API --> Stripe
-  API --> Slack
+  API --> Telegram
   API --> Email
   Queue --> DB
   Queue --> AI
@@ -141,12 +141,12 @@ flowchart TB
 
     subgraph Domains["Domain modules"]
       TeamsMod["Teams · Permissions · Usage"]
-      ProjMod["Projects · GitHub · GitLab"]
+      ProjMod["Projects · GitHub"]
       AnalyticsMod["Analytics · DORA · Benchmarks"]
       AiMod["AI · Comments"]
       OpsMod["Goals · Wellness · Alerts · Reports"]
       GameMod["Gamification · Audit"]
-      BillMod["Billing · Slack · Integrations"]
+      BillMod["Billing · Telegram · Integrations"]
     end
 
     QueueMod["Queue module<br/>BullMQ"]
@@ -154,7 +154,7 @@ flowchart TB
 
   DB[(PostgreSQL)]
   Redis[(Redis / Upstash)]
-  Providers["Git providers · Groq · Stripe · Slack · Resend"]
+  Providers["GitHub · Groq · Stripe · Telegram · Resend"]
 
   HTTP --> Domains
   WS --> Domains
@@ -173,7 +173,7 @@ flowchart TB
 - Prisma 6 + PostgreSQL (shared `@devpulse/database` package)
 - Octokit / GitBeaker for source sync
 - Groq for AI workloads
-- Stripe, Slack Bolt, Resend
+- Stripe, Telegram Bot API, Resend
 - BullMQ for background jobs; Upstash Redis for cache
 
 ### Data model (core)
@@ -225,7 +225,7 @@ devpulse/
 | Cache / jobs | Upstash Redis, BullMQ |
 | AI | Groq |
 | Payments | Stripe |
-| Notifications | Slack, Resend |
+| Notifications | Telegram, Resend |
 | Tooling | TypeScript, ESLint, Turbo |
 
 ---
@@ -238,7 +238,7 @@ devpulse/
 - pnpm 9+
 - PostgreSQL database
 - GitHub PAT (for sync / seed)
-- Optional: Redis, Groq, Stripe, Slack, Resend keys for full features
+- Optional: Redis, Groq, Stripe, Telegram, Resend keys for full features
 
 ### Install
 
@@ -290,7 +290,10 @@ STRIPE_WEBHOOK_SECRET=
 STRIPE_PRO_PRICE_ID=
 STRIPE_ENTERPRISE_PRICE_ID=
 RESEND_API_KEY=
-# Optional: GitHub App, Slack, GitLab
+# Optional: GitHub App, Telegram bot
+TELEGRAM_BOT_TOKEN=
+TELEGRAM_CHAT_ID=
+TELEGRAM_WEBHOOK_SECRET=
 ```
 
 ### Database
@@ -334,7 +337,7 @@ pnpm --filter @devpulse/api seed
 | Docs | Swagger UI at `/api/docs` |
 | Auth | Session cookie or `Authorization: Bearer <token>` |
 | Realtime | Socket.IO namespace `/events` |
-| Webhooks | `POST /github/webhook`, Stripe + Slack event routes |
+| Webhooks | `POST /github/webhook`, Stripe, `POST /telegram/webhook` |
 
 ---
 

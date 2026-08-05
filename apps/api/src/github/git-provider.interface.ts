@@ -62,5 +62,4 @@ export const GIT_PROVIDER = "GIT_PROVIDER";
 
 export type GitProviderMap = {
   github: GitProvider;
-  gitlab: GitProvider;
 };

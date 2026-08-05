@@ -17,13 +17,13 @@ import { SiteHeader } from "./site-header";
 import { HeroVisual } from "./hero-visual";
 import { SmoothScroll } from "./smooth-scroll";
 
-const proof = ["GitHub", "GitLab", "Slack", "VS Code", "CLI"];
+const proof = ["GitHub", "Telegram", "VS Code", "CLI"];
 
 const steps = [
   {
     step: "01",
     title: "Connect your repos",
-    body: "Link GitHub or GitLab in minutes. DevPulse syncs pull requests, commits, and review activity automatically.",
+    body: "Link GitHub in minutes. DevPulse syncs pull requests, commits, and review activity automatically.",
   },
   {
     step: "02",

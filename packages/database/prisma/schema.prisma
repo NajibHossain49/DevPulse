@@ -141,7 +141,7 @@ model Project {
   id           String              @id @default(cuid())
   name         String
   githubRepo   String
-  provider     String              @default("github") // github | gitlab
+  provider     String              @default("github") // github
   teamId       String
   autoReview   Boolean             @default(true)
   team         Team                @relation(fields: [teamId], references: [id], onDelete: Cascade)

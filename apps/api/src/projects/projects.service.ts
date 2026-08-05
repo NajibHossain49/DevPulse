@@ -21,19 +21,18 @@ export class ProjectsService {
     private readonly providers: GitProviderMap,
   ) {}
 
-  private getProvider(type: string | undefined): GitProvider {
-    return type === "gitlab" ? this.providers.gitlab : this.providers.github;
+  private getProvider(): GitProvider {
+    return this.providers.github;
   }
 
   async createProject(userId: string, dto: CreateProjectDto) {
     await this.assertTeamAccess(userId, dto.teamId);
 
-    const providerType = dto.provider || "github";
-    const provider = this.getProvider(providerType);
+    const provider = this.getProvider();
     const repoExists = await provider.validateRepo(dto.githubRepo);
     if (!repoExists) {
       throw new BadRequestException(
-        `${providerType === "gitlab" ? "GitLab" : "GitHub"} repository "${dto.githubRepo}" was not found or is not accessible`,
+        `GitHub repository "${dto.githubRepo}" was not found or is not accessible`,
       );
     }
 
@@ -42,7 +41,7 @@ export class ProjectsService {
         name: dto.name,
         githubRepo: dto.githubRepo,
         teamId: dto.teamId,
-        provider: providerType,
+        provider: "github",
       },
     });
   }

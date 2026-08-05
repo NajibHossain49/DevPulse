@@ -18,13 +18,12 @@ import { UsageModule } from "./usage/usage.module";
 import { WellnessModule } from "./wellness/wellness.module";
 import { AlertsModule } from "./alerts/alerts.module";
 import { EventsModule } from "./events/events.module";
-import { SlackModule } from "./slack/slack.module";
+import { TelegramModule } from "./telegram/telegram.module";
 import { CommentsModule } from "./comments/comments.module";
 import { BenchmarksModule } from "./benchmarks/benchmarks.module";
 import { GoalsModule } from "./goals/goals.module";
 import { ReportsModule } from "./reports/reports.module";
 import { IntegrationsModule } from "./integrations/integrations.module";
-import { GitlabModule } from "./gitlab/gitlab.module";
 import { GamificationModule } from "./gamification/gamification.module";
 import { AuditModule } from "./audit/audit.module";
 import { QueueModule } from "./queue/queue.module";
@@ -45,7 +44,6 @@ import { QueueModule } from "./queue/queue.module";
     TeamsModule,
     ProjectsModule,
     GithubModule,
-    GitlabModule,
     IntegrationsModule,
     RedisModule,
     AnalyticsModule,
@@ -56,7 +54,7 @@ import { QueueModule } from "./queue/queue.module";
     WellnessModule,
     AlertsModule,
     EventsModule,
-    SlackModule,
+    TelegramModule,
     CommentsModule,
     BenchmarksModule,
     GoalsModule,

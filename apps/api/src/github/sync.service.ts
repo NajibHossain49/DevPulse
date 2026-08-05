@@ -1,7 +1,6 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
 import { GithubService } from "./github.service";
-import { GitlabProvider } from "../gitlab/gitlab.provider";
 import {
   GitProvider,
   NormalizedCommit,
@@ -24,12 +23,11 @@ export class SyncService {
 
   constructor(
     private readonly github: GithubService,
-    private readonly gitlab: GitlabProvider,
     private readonly prisma: PrismaService,
   ) {}
 
-  private getProvider(type: string | null | undefined): GitProvider {
-    return type === "gitlab" ? this.gitlab : this.github;
+  private getProvider(_type?: string | null): GitProvider {
+    return this.github;
   }
 
   async syncProject(projectId: string): Promise<SyncSummary> {

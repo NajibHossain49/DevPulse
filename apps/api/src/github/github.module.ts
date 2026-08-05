@@ -3,7 +3,6 @@ import { PrismaModule } from "../prisma/prisma.module";
 import { AuthModule } from "../auth/auth.module";
 import { AiModule } from "../ai/ai.module";
 import { EventsModule } from "../events/events.module";
-import { GitlabModule } from "../gitlab/gitlab.module";
 import { GithubService } from "./github.service";
 import { GithubAppService } from "./github-app.service";
 import { SyncService } from "./sync.service";
@@ -15,7 +14,6 @@ import { WebhookController } from "./webhook.controller";
     PrismaModule,
     AuthModule,
     EventsModule,
-    GitlabModule,
     forwardRef(() => AiModule),
   ],
   controllers: [SyncController, WebhookController],

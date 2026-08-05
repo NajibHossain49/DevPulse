@@ -14,7 +14,6 @@
   },
   "dependencies": {
     "@devpulse/database": "workspace:*",
-    "@gitbeaker/rest": "^43.8.0",
     "@nestjs/bullmq": "^11.0.4",
     "@nestjs/common": "^11.0.0",
     "@nestjs/config": "^4.0.0",
@@ -26,7 +25,6 @@
     "@nestjs/websockets": "^11.1.28",
     "@octokit/auth-app": "^8.2.0",
     "@octokit/rest": "^21.0.0",
-    "@slack/bolt": "^5.0.0",
     "@upstash/redis": "^1.34.0",
     "bullmq": "^5.81.3",
     "class-transformer": "^0.5.1",

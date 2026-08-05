@@ -27,6 +27,6 @@ export class CreateProjectDto {
   teamId: string;
 
   @IsOptional()
-  @IsIn(["github", "gitlab"])
-  provider?: "github" | "gitlab";
+  @IsIn(["github"])
+  provider?: "github";
 }

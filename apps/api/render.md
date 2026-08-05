@@ -35,7 +35,7 @@ Public URL after deploy (default service name):
 | `GITHUB_PAT` | For sync |
 | `GROQ_API_KEY` | AI features |
 | `UPSTASH_REDIS_REST_URL` / `TOKEN` | Cache |
-| Stripe / Resend / Slack | Optional |
+| Stripe / Resend / Telegram | Optional |
 
 Render sets `PORT` automatically — do not hardcode it.
 

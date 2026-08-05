@@ -40,7 +40,6 @@ export function AddProjectModal({
   const [teams, setTeams] = useState<Team[]>([]);
   const [name, setName] = useState("");
   const [githubRepo, setGithubRepo] = useState("");
-  const [provider, setProvider] = useState<"github" | "gitlab">("github");
   const [teamId, setTeamId] = useState(defaultTeamId ?? "");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -59,7 +58,6 @@ export function AddProjectModal({
   const reset = () => {
     setName("");
     setGithubRepo("");
-    setProvider("github");
     setError(null);
   };
 
@@ -86,18 +84,15 @@ export function AddProjectModal({
         name: name.trim(),
         githubRepo: githubRepo.trim(),
         teamId,
-        provider,
+        provider: "github",
       });
       toast.success("Project created");
 
       const projectId = created.data.id;
-      // Fire the initial sync but don't block the UI on it completing.
       apiPost("/github/sync", { projectId }).catch(() => {
         toast.error("Project created, but initial sync failed. Try 'Sync Now'.");
       });
-      toast.message(
-        `Syncing project data from ${provider === "gitlab" ? "GitLab" : "GitHub"}...`,
-      );
+      toast.message("Syncing project data from GitHub...");
 
       setOpen(false);
       reset();
@@ -131,7 +126,7 @@ export function AddProjectModal({
         <DialogHeader>
           <DialogTitle>Add a project</DialogTitle>
           <DialogDescription>
-            Connect a GitHub or GitLab repository to start tracking analytics.
+            Connect a GitHub repository to start tracking analytics.
           </DialogDescription>
         </DialogHeader>
 
@@ -147,29 +142,7 @@ export function AddProjectModal({
           </div>
 
           <div className="space-y-2">
-            <Label>Provider</Label>
-            <Select
-              value={provider}
-              onValueChange={(v) => setProvider(v as "github" | "gitlab")}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue>
-                  {(value: string | null) =>
-                    value === "gitlab" ? "GitLab" : "GitHub"
-                  }
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="github">GitHub</SelectItem>
-                <SelectItem value="gitlab">GitLab</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="project-repo">
-              {provider === "gitlab" ? "GitLab" : "GitHub"} repository
-            </Label>
+            <Label htmlFor="project-repo">GitHub repository</Label>
             <Input
               id="project-repo"
               placeholder="owner/repo"
@@ -179,10 +152,10 @@ export function AddProjectModal({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="project-team">Team</Label>
-            <Select value={teamId} onValueChange={(v) => setTeamId(v as string)}>
-              <SelectTrigger id="project-team" className="w-full">
-                <SelectValue placeholder="Select a team">
+            <Label>Team</Label>
+            <Select value={teamId} onValueChange={setTeamId}>
+              <SelectTrigger className="w-full">
+                <SelectValue>
                   {(value: string | null) =>
                     teams.find((t) => t.id === value)?.name ?? "Select a team"
                   }
@@ -196,19 +169,14 @@ export function AddProjectModal({
                 ))}
               </SelectContent>
             </Select>
-            {teams.length === 0 && (
-              <p className="text-xs text-muted-foreground">
-                No teams yet. Create a team first from the Teams page.
-              </p>
-            )}
           </div>
 
           {error && <p className="text-sm text-destructive">{error}</p>}
 
-          <DialogFooter showCloseButton>
+          <DialogFooter>
             <Button type="submit" disabled={submitting}>
-              {submitting && <Loader2 className="animate-spin" />}
-              Create project
+              {submitting ? <Loader2 className="animate-spin" /> : null}
+              {submitting ? "Creating..." : "Create project"}
             </Button>
           </DialogFooter>
         </form>
