@@ -153,7 +153,10 @@ export function AddProjectModal({
 
           <div className="space-y-2">
             <Label>Team</Label>
-            <Select value={teamId} onValueChange={setTeamId}>
+            <Select
+              value={teamId || null}
+              onValueChange={(value) => setTeamId(value ?? "")}
+            >
               <SelectTrigger className="w-full">
                 <SelectValue>
                   {(value: string | null) =>
