@@ -1,10 +1,25 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
+/**
+ * Browser calls go through the same-origin BFF (`/api/backend/*`) so Better Auth
+ * cookies stay on the Vercel host and are forwarded to the Nest API as Bearer.
+ * Server-side calls hit the Nest API directly.
+ */
+function getApiBase(): string {
+  if (typeof window !== "undefined") {
+    return "/api/backend";
+  }
+  return (
+    process.env.API_URL ||
+    process.env.NEXT_PUBLIC_API_URL ||
+    "http://localhost:3001"
+  );
+}
 
 export async function apiFetch(
   path: string,
   options?: RequestInit,
 ): Promise<Response> {
-  return fetch(`${API_URL}${path}`, {
+  const normalized = path.startsWith("/") ? path : `/${path}`;
+  return fetch(`${getApiBase()}${normalized}`, {
     ...options,
     credentials: "include",
     headers: {
