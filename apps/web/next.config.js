@@ -14,6 +14,8 @@ const withPWA = require("@ducanh2912/next-pwa").default({
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   transpilePackages: ["@devpulse/database"],
+  // Keep Prisma engines out of the bundler so the RHEL query engine is found on Vercel.
+  serverExternalPackages: ["@prisma/client", "prisma", "@devpulse/database"],
 };
 
 module.exports = withPWA(nextConfig);
